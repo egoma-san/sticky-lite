@@ -1,9 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import Board from '@/app/(sticky)/components/Board'
-import { useStickyStore } from '@/app/(sticky)/store/useStickyStore'
+import Board from '@/app/components/Board'
+import { useStickyStore } from '@/app/store/useStickyStore'
 
 // Mock the store
-jest.mock('@/app/(sticky)/store/useStickyStore')
+jest.mock('@/app/store/useStickyStore')
 
 describe('Board', () => {
   const mockAddSticky = jest.fn()

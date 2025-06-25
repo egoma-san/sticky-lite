@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useStickyStore } from '@/app/(sticky)/store/useStickyStore'
+import { useStickyStore } from '@/app/store/useStickyStore'
 
 describe('useStickyStore', () => {
   beforeEach(() => {
