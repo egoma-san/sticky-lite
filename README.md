@@ -58,8 +58,6 @@ pnpm dev
 
 Visit http://localhost:3000 to start using Sticky-Lite!
 
-> **Note:** The application is protected by Basic Authentication. Default credentials are `admin` / `sticky2024`.
-
 ### Running Tests
 
 ```bash
@@ -81,7 +79,6 @@ pnpm test:e2e    # E2E tests
 - **🔍 Zoom & Pan** - Navigate the board with mouse wheel or pinch gestures
 - **🗑️ Easy Disposal** - Drag notes to the trash zone to delete them
 - **💾 Auto-save** - All notes are automatically saved to localStorage
-- **🔐 Basic Auth** - Simple authentication to protect your notes
 
 ### Technical Features
 
@@ -299,7 +296,6 @@ app/
 tests/
 ├─ unit/        # Jest / Vitest
 └─ e2e/         # Playwright
-middleware.ts   # Basic authentication
 Dockerfile
 docker-compose.yml
 docker-compose.test.yml
@@ -338,32 +334,6 @@ docker compose -f docker-compose.test.yml run --rm sut  # 失敗を確認
 
 ---
 
-## 🔐 Basic Authentication
-
-The application is protected with Basic authentication for security.
-
-### Default Credentials
-- Username: `admin`
-- Password: `sticky2024`
-
-### Changing Credentials
-
-1. Copy the example environment file:
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-2. Edit `.env.local` and update the credentials:
-   ```env
-   BASIC_AUTH_USER=your-username
-   BASIC_AUTH_PASS=your-password
-   ```
-
-3. Restart the application to apply changes
-
-> **Security Note:** Always use strong passwords in production environments. The `.env.local` file is gitignored and won't be committed to version control.
-
----
 
 ## 📝 License
 
