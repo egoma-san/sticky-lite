@@ -1,0 +1,254 @@
+'use client'
+
+import React, { useState, useRef, useEffect } from 'react'
+import { useStickyStore } from '../store/useStickyStore'
+import StickyNote from './StickyNote'
+import TrashZone from './TrashZone'
+
+export default function Board() {
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky } = useStickyStore()
+  
+  // Initialize with default values to avoid hydration mismatch
+  const [scale, setScale] = useState(1)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 })
+  const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 })
+  const [hasDragged, setHasDragged] = useState(false)
+  const [selectedStickyId, setSelectedStickyId] = useState<string | null>(null)
+  const boardRef = useRef<HTMLDivElement>(null)
+  
+  // Load saved view state after mount
+  useEffect(() => {
+    const saved = localStorage.getItem('board-view-state')
+    if (saved) {
+      try {
+        const viewState = JSON.parse(saved)
+        if (viewState.scale) setScale(viewState.scale)
+        if (viewState.position) setPosition(viewState.position)
+      } catch (e) {
+        console.error('Failed to load view state:', e)
+      }
+    }
+  }, [])
+
+  const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only create sticky if clicking directly on the board canvas and not dragging
+    if ((e.target as HTMLElement).dataset.testid === 'board-canvas' && !hasDragged) {
+      const rect = boardRef.current?.getBoundingClientRect()
+      if (rect) {
+        const x = (e.clientX - rect.left - position.x) / scale
+        const y = (e.clientY - rect.top - position.y) / scale
+        addSticky(x, y)
+      }
+      // Deselect any selected sticky when clicking on board
+      setSelectedStickyId(null)
+    }
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? 0.9 : 1.1
+      setScale((prevScale) => Math.min(Math.max(0.1, prevScale * delta), 3))
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setMouseDownPos({ x: e.clientX, y: e.clientY })
+    setHasDragged(false)
+    
+    // Pan on middle button, shift+click, or clicking on the board itself
+    if (e.button === 1 || (e.button === 0 && e.shiftKey) || 
+        (e.button === 0 && (e.target as HTMLElement).dataset.testid === 'board-canvas')) {
+      e.preventDefault()
+      setIsPanning(true)
+      setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Check if mouse has moved more than 5 pixels (threshold for drag detection)
+    const distance = Math.sqrt(
+      Math.pow(e.clientX - mouseDownPos.x, 2) + 
+      Math.pow(e.clientY - mouseDownPos.y, 2)
+    )
+    if (distance > 5) {
+      setHasDragged(true)
+    }
+    
+    if (isPanning) {
+      setPosition({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsPanning(false)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move'
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const stickyId = e.dataTransfer.getData('stickyId')
+    if (stickyId && boardRef.current) {
+      const rect = boardRef.current.getBoundingClientRect()
+      const x = (e.clientX - rect.left - position.x) / scale - 96 // Half of sticky width
+      const y = (e.clientY - rect.top - position.y) / scale - 96 // Half of sticky height
+      updateStickyPosition(stickyId, x, y)
+    }
+  }
+
+  // Save view state to localStorage
+  useEffect(() => {
+    // Skip saving on initial mount
+    const timeoutId = setTimeout(() => {
+      const viewState = {
+        scale,
+        position
+      }
+      localStorage.setItem('board-view-state', JSON.stringify(viewState))
+    }, 100)
+    
+    return () => clearTimeout(timeoutId)
+  }, [scale, position])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault()
+      }
+      // Delete key is handled by the StickyNote component itself
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedStickyId, deleteSticky])
+
+  return (
+    <div 
+      ref={boardRef}
+      data-testid="board"
+      className={`w-full h-screen bg-gray-100 relative overflow-hidden ${
+        isPanning ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
+      onClick={handleBoardClick}
+      onWheel={handleWheel}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <div
+        data-testid="board-canvas"
+        className="absolute inset-0"
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+          transformOrigin: '0 0',
+        }}
+      >
+        {stickies.map((sticky) => (
+          <StickyNote
+            key={sticky.id}
+            id={sticky.id}
+            x={sticky.x}
+            y={sticky.y}
+            text={sticky.text}
+            isSelected={selectedStickyId === sticky.id}
+            onSelect={() => setSelectedStickyId(sticky.id)}
+            onTextChange={updateStickyText}
+            onPositionChange={updateStickyPosition}
+            onDelete={deleteSticky}
+          />
+        ))}
+      </div>
+      <TrashZone 
+        onDrop={deleteSticky} 
+        onDeleteSelected={() => {
+          if (selectedStickyId) {
+            deleteSticky(selectedStickyId)
+            setSelectedStickyId(null)
+          }
+        }}
+      />
+      
+      {/* Zoom controls with iOS glass design */}
+      <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 flex flex-col gap-2 z-50">
+        <button
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
+            border: '1px solid rgba(255, 255, 255, 0.5)',
+          }}
+          onClick={() => setScale((s) => Math.min(3, s * 1.2))}
+        >
+          <span 
+            className="text-xl sm:text-2xl font-medium relative z-10"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.9) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
+              filter: 'drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1))'
+            }}
+          >
+            +
+          </span>
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
+              borderRadius: 'inherit'
+            }}
+          />
+        </button>
+        <button
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
+            border: '1px solid rgba(255, 255, 255, 0.5)',
+          }}
+          onClick={() => setScale((s) => Math.max(0.1, s * 0.8))}
+        >
+          <span 
+            className="text-xl sm:text-2xl font-medium relative z-10"
+            style={{
+              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.9) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
+              filter: 'drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1))'
+            }}
+          >
+            −
+          </span>
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
+              borderRadius: 'inherit'
+            }}
+          />
+        </button>
+      </div>
+    </div>
+  )
+}

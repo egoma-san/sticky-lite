@@ -1,0 +1,3 @@
+# This is a placeholder for the crumple sound effect.
+# In a real implementation, you would add an actual MP3 file here.
+# For now, we're using inline base64 audio in the components.

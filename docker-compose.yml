@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    image: sticky-lite:dev
+    ports: ["3000:3000"]
+    volumes:
+      - .:/app            # ホットリロード
+      - /app/node_modules # 隠蔽
+    environment:
+      - NODE_ENV=development
+    command: ["pnpm","dev"]
