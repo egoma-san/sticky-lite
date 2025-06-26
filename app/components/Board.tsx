@@ -148,11 +148,11 @@ export default function Board() {
     
     // Check if clicking on board or board-canvas (not on a sticky note or UI element)
     const target = e.target as HTMLElement
-    const isBoard = target.dataset.testid === 'board' || target.dataset.testid === 'board-canvas'
-    const isBackground = isBoard || target.closest('[data-testid="board"]') === boardRef.current
+    const clickedOnSticky = !!target.closest('[data-testid="sticky-note"]')
+    const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
     
     // Allow panning with left click on background (without shift)
-    if (isBackground && e.button === 0 && !target.closest('[data-testid="sticky-note"]')) {
+    if (e.button === 0 && !clickedOnSticky && !clickedOnUI) {
       e.preventDefault()
       setIsPanning(true)
       setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
