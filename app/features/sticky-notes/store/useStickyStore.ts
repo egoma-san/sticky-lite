@@ -1,23 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-
-export interface Sticky {
-  id: string
-  x: number
-  y: number
-  text: string
-  createdAt: Date
-}
-
-interface StickyStore {
-  stickies: Sticky[]
-  addSticky: (x: number, y: number) => void
-  updateStickyText: (id: string, text: string) => void
-  updateStickyPosition: (id: string, x: number, y: number) => void
-  deleteSticky: (id: string) => void
-  deleteMultiple: (ids: string[]) => void
-  clearAll: () => void
-}
+import { Sticky, StickyStore } from '../types'
 
 export const useStickyStore = create<StickyStore>()(
   persist(

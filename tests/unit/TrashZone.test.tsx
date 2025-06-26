@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import TrashZone from '@/app/components/TrashZone'
+import { TrashZone } from '@/app/features/sticky-notes'
 
 describe('TrashZone', () => {
   const mockOnDrop = jest.fn()

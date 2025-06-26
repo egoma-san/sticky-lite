@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import StickyNote from '@/app/components/StickyNote'
+import { StickyNote } from '@/app/features/sticky-notes'
 
 describe('StickyNote', () => {
   const mockOnTextChange = jest.fn()
