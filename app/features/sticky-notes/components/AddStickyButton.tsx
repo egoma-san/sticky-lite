@@ -5,7 +5,7 @@ import { useStickyStore } from '../store/useStickyStore'
 import { StickyColor } from '../types'
 
 interface AddStickyButtonProps {
-  boardRef: React.RefObject<HTMLDivElement>
+  boardRef: React.RefObject<HTMLDivElement | null>
   scale: number
   position: { x: number; y: number }
 }

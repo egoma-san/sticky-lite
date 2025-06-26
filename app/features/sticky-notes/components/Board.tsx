@@ -77,7 +77,7 @@ export default function Board() {
       const centerY = window.innerHeight / 2 - initialOffset
       setPosition({ x: centerX, y: centerY })
     }
-  }, [])
+  }, [initialOffset])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only deselect when clicking on empty background (not when dragging)
