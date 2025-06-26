@@ -31,6 +31,12 @@ export default function StickyNote({
   const noteRef = useRef<HTMLDivElement>(null)
 
   const handleDragStart = (e: React.DragEvent) => {
+    // Prevent dragging when shift is held
+    if (e.shiftKey) {
+      e.preventDefault()
+      return
+    }
+    
     setIsDragging(true)
     const rect = noteRef.current?.getBoundingClientRect()
     if (rect) {

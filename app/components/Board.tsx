@@ -132,13 +132,8 @@ export default function Board() {
     setMouseDownPos({ x: e.clientX, y: e.clientY })
     setHasDragged(false)
     
-    // Check if clicking on board or board-canvas (not on a sticky note or UI element)
-    const target = e.target as HTMLElement
-    const isBoard = target.dataset.testid === 'board' || target.dataset.testid === 'board-canvas'
-    const isBackground = isBoard || target.closest('[data-testid="board"]') === boardRef.current
-    
-    // Start selection box with shift+drag on background
-    if (isBackground && e.button === 0 && e.shiftKey && !target.closest('[data-testid="sticky-note"]')) {
+    // Start selection box with shift+drag anywhere
+    if (e.button === 0 && e.shiftKey) {
       e.preventDefault()
       const rect = boardRef.current?.getBoundingClientRect()
       if (rect) {
@@ -148,9 +143,16 @@ export default function Board() {
         setSelectionStart({ x: startX, y: startY })
         setSelectionBox({ x: startX, y: startY, width: 0, height: 0 })
       }
+      return
     }
+    
+    // Check if clicking on board or board-canvas (not on a sticky note or UI element)
+    const target = e.target as HTMLElement
+    const isBoard = target.dataset.testid === 'board' || target.dataset.testid === 'board-canvas'
+    const isBackground = isBoard || target.closest('[data-testid="board"]') === boardRef.current
+    
     // Allow panning with left click on background (without shift)
-    else if (isBackground && e.button === 0 && !e.shiftKey && !target.closest('[data-testid="sticky-note"]')) {
+    if (isBackground && e.button === 0 && !target.closest('[data-testid="sticky-note"]')) {
       e.preventDefault()
       setIsPanning(true)
       setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
