@@ -47,6 +47,21 @@ export const useStickyStore = create<StickyStore>()(
     }),
     {
       name: 'sticky-storage',
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // Migrate old stickies without color property
+          return {
+            ...persistedState,
+            stickies: persistedState.stickies?.map((sticky: any) => ({
+              ...sticky,
+              color: sticky.color || 'yellow'
+            })) || [],
+            selectedColor: persistedState.selectedColor || 'yellow'
+          }
+        }
+        return persistedState
+      }
     }
   )
 )

@@ -359,7 +359,7 @@ export default function Board() {
             x={sticky.x}
             y={sticky.y}
             text={sticky.text}
-            color={sticky.color}
+            color={sticky.color || 'yellow'}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             onSelect={(e?: React.MouseEvent) => {

@@ -81,11 +81,11 @@ export default function AddStickyButton({ boardRef, scale, position }: AddSticky
   const currentColorClass = colors.find(c => c.value === selectedColor)?.bg || 'bg-yellow-300'
 
   return (
-    <div className="fixed bottom-28 left-4 sm:bottom-36 sm:left-6 md:bottom-40 md:left-8 z-50">
+    <div className="fixed bottom-28 right-4 sm:bottom-36 sm:right-6 md:bottom-40 md:right-8 z-50">
       <div className="relative">
         {/* Color picker */}
         {showColorPicker && (
-          <div className="absolute bottom-full left-0 mb-2 flex flex-col gap-2">
+          <div className="absolute bottom-full right-0 mb-2 flex flex-col gap-2">
             {colors.map((color) => (
               <button
                 key={color.value}
