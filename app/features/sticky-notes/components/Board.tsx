@@ -5,6 +5,7 @@ import { useStickyStore } from '../store/useStickyStore'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
+import ZoomSlider from './ZoomSlider'
 
 export default function Board() {
   const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky, deleteMultiple } = useStickyStore()
@@ -115,7 +116,7 @@ export default function Board() {
       // Calculate new scale with minimum constraint
       const delta = e.deltaY > 0 ? 0.9 : 1.1
       const minScale = getMinScale()
-      const newScale = Math.min(Math.max(minScale, scale * delta), 3)
+      const newScale = Math.min(Math.max(minScale, scale * delta), 1.5)
       
       // Calculate new position to keep the same canvas point under mouse
       const newPos = {
@@ -416,127 +417,36 @@ export default function Board() {
         }}
       />
       
-      {/* Zoom controls with iOS glass design */}
-      <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 md:bottom-8 md:left-8 flex flex-col gap-2 z-50">
-        <button
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-          }}
-          onClick={() => {
-            const rect = boardRef.current?.getBoundingClientRect()
-            if (!rect) return
-            
-            // Use center of viewport as zoom origin
-            const centerX = rect.width / 2
-            const centerY = rect.height / 2
-            
-            // Calculate the point on canvas at center (before zoom)
-            const canvasX = (centerX - position.x) / scale
-            const canvasY = (centerY - position.y) / scale
-            
-            // Calculate new scale
-            const minScale = getMinScale()
-            const newScale = Math.min(3, scale * 1.2)
-            
-            // Calculate new position to keep the same canvas point at center
-            const newPos = {
-              x: centerX - canvasX * newScale,
-              y: centerY - canvasY * newScale
-            }
-            
-            // Constrain position to keep canvas in view
-            const constrainedPos = constrainPosition(newPos, newScale)
-            
-            setScale(newScale)
-            setPosition(constrainedPos)
-          }}
-        >
-          <span 
-            className="text-xl sm:text-2xl font-medium relative z-10"
-            style={{
-              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.9) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
-              filter: 'drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1))'
-            }}
-          >
-            +
-          </span>
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
-              borderRadius: 'inherit'
-            }}
-          />
-        </button>
-        <button
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.5)',
-          }}
-          onClick={() => {
-            const rect = boardRef.current?.getBoundingClientRect()
-            if (!rect) return
-            
-            // Use center of viewport as zoom origin
-            const centerX = rect.width / 2
-            const centerY = rect.height / 2
-            
-            // Calculate the point on canvas at center (before zoom)
-            const canvasX = (centerX - position.x) / scale
-            const canvasY = (centerY - position.y) / scale
-            
-            // Calculate new scale with minimum constraint
-            const minScale = getMinScale()
-            const newScale = Math.max(minScale, scale * 0.8)
-            
-            // Calculate new position to keep the same canvas point at center
-            const newPos = {
-              x: centerX - canvasX * newScale,
-              y: centerY - canvasY * newScale
-            }
-            
-            // Constrain position to keep canvas in view
-            const constrainedPos = constrainPosition(newPos, newScale)
-            
-            setScale(newScale)
-            setPosition(constrainedPos)
-          }}
-        >
-          <span 
-            className="text-xl sm:text-2xl font-medium relative z-10"
-            style={{
-              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.9) 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textShadow: '0 1px 2px rgba(255, 255, 255, 0.8)',
-              filter: 'drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1))'
-            }}
-          >
-            −
-          </span>
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
-              borderRadius: 'inherit'
-            }}
-          />
-        </button>
-      </div>
+      {/* Zoom slider */}
+      <ZoomSlider 
+        scale={scale}
+        minScale={getMinScale()}
+        maxScale={1.5}
+        onScaleChange={(newScale) => {
+          const rect = boardRef.current?.getBoundingClientRect()
+          if (!rect) return
+          
+          // Use center of viewport as zoom origin
+          const centerX = rect.width / 2
+          const centerY = rect.height / 2
+          
+          // Calculate the point on canvas at center (before zoom)
+          const canvasX = (centerX - position.x) / scale
+          const canvasY = (centerY - position.y) / scale
+          
+          // Calculate new position to keep the same canvas point at center
+          const newPos = {
+            x: centerX - canvasX * newScale,
+            y: centerY - canvasY * newScale
+          }
+          
+          // Constrain position to keep canvas in view
+          const constrainedPos = constrainPosition(newPos, newScale)
+          
+          setScale(newScale)
+          setPosition(constrainedPos)
+        }}
+      />
     </div>
   )
 }
