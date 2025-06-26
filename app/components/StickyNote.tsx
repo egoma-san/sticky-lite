@@ -85,7 +85,8 @@ export default function StickyNote({
   }, [id, onDelete])
 
   useEffect(() => {
-    if (isSelected) {
+    // Only handle delete key if this is the only selected note
+    if (isSelected && !hasMultipleSelection) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
           // Don't delete if the user is typing in a textarea or input
@@ -100,7 +101,7 @@ export default function StickyNote({
       window.addEventListener('keydown', handleKeyDown)
       return () => window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isSelected, id, handleDelete])
+  }, [isSelected, hasMultipleSelection, id, handleDelete])
   
   // Handle clicking outside to exit edit mode
   useEffect(() => {
