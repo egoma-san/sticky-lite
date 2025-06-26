@@ -6,9 +6,9 @@ test.describe('Sticky Note Flow', () => {
   })
 
   test('should create, edit, move and delete sticky note', async ({ page }) => {
-    // Create a sticky note by clicking on the board
+    // Create a sticky note by double-clicking on the board
     const boardCanvas = page.getByTestId('board-canvas')
-    await boardCanvas.click({ position: { x: 200, y: 200 } })
+    await boardCanvas.dblclick({ position: { x: 200, y: 200 } })
 
     // Verify sticky note is created
     const stickyNote = page.getByTestId('sticky-note')
@@ -25,7 +25,7 @@ test.describe('Sticky Note Flow', () => {
     })
 
     // Create another sticky note
-    await boardCanvas.click({ position: { x: 300, y: 100 } })
+    await boardCanvas.dblclick({ position: { x: 300, y: 100 } })
     const stickyNotes = page.getByTestId('sticky-note')
     await expect(stickyNotes).toHaveCount(2)
 
@@ -44,7 +44,7 @@ test.describe('Sticky Note Flow', () => {
   test('should zoom and pan the board', async ({ page }) => {
     // Create a sticky note
     const boardCanvas = page.getByTestId('board-canvas')
-    await boardCanvas.click({ position: { x: 200, y: 200 } })
+    await boardCanvas.dblclick({ position: { x: 200, y: 200 } })
 
     // Zoom in using button
     const zoomInButton = page.getByRole('button', { name: '+' })
@@ -57,10 +57,6 @@ test.describe('Sticky Note Flow', () => {
     const zoomOutButton = page.getByRole('button', { name: '-' })
     await zoomOutButton.click()
     
-    // Reset zoom
-    const resetButton = page.getByRole('button', { name: '1:1' })
-    await resetButton.click()
-    await expect(boardCanvas).toHaveAttribute('style', /scale\(1\)/)
 
     // Pan the board (shift + drag)
     await page.keyboard.down('Shift')

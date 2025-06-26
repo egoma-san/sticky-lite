@@ -69,6 +69,11 @@ export default function StickyNote({
     if (isSelected) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
+          // Don't delete if the user is typing in a textarea or input
+          const activeElement = document.activeElement
+          if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+            return
+          }
           e.preventDefault()
           handleDelete()
         }
@@ -102,15 +107,53 @@ export default function StickyNote({
       <div className={`relative w-full h-full bg-yellow-300 shadow-md overflow-hidden ${
         isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
       } ${!isDragging ? 'hover:shadow-lg' : 'shadow-xl'}`}>
-        {/* Folded corner - bottom right */}
-        <div className="absolute bottom-0 right-0 w-8 h-8">
-          {/* Shadow under the fold */}
-          <div className="absolute bottom-0 right-0 w-8 h-8 bg-gradient-to-br from-transparent via-yellow-400/20 to-yellow-600/40" />
-          {/* The folded triangle */}
-          <div className="absolute bottom-0 right-0 w-0 h-0 border-b-[32px] border-b-yellow-100 border-l-[32px] border-l-transparent" 
-               style={{ filter: 'drop-shadow(-2px -2px 3px rgba(0,0,0,0.2))' }} />
-          {/* Inner fold highlight */}
-          <div className="absolute bottom-0 right-0 w-0 h-0 border-b-[28px] border-b-yellow-50 border-l-[28px] border-l-transparent" />
+        {/* Folded corner - bottom right with curved design */}
+        <div className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none">
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            className="absolute bottom-0 right-0"
+            style={{ filter: 'drop-shadow(-1px -1px 2px rgba(0,0,0,0.15))' }}
+          >
+            {/* Shadow gradient under the fold */}
+            <defs>
+              <linearGradient id={`foldShadow-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="transparent" />
+                <stop offset="50%" stopColor="rgba(251, 191, 36, 0.1)" />
+                <stop offset="100%" stopColor="rgba(217, 119, 6, 0.3)" />
+              </linearGradient>
+              <linearGradient id={`foldFront-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="50%" stopColor="#fde68a" />
+                <stop offset="100%" stopColor="#fcd34d" />
+              </linearGradient>
+              <filter id={`foldBlur-${id}`}>
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
+              </filter>
+            </defs>
+            
+            {/* Shadow under the fold */}
+            <path
+              d="M 48 20 Q 48 48 20 48 L 48 48 Z"
+              fill={`url(#foldShadow-${id})`}
+              opacity="0.6"
+            />
+            
+            {/* The folded corner with curve */}
+            <path
+              d="M 48 16 Q 48 48 16 48 L 48 48 Z"
+              fill={`url(#foldFront-${id})`}
+              filter={`url(#foldBlur-${id})`}
+            />
+            
+            {/* Highlight on the fold */}
+            <path
+              d="M 48 18 Q 48 46 18 48 L 20 48 Q 48 48 48 20 Z"
+              fill="rgba(255, 255, 255, 0.4)"
+              opacity="0.7"
+            />
+          </svg>
         </div>
         
         <textarea

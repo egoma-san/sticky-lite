@@ -22,7 +22,19 @@ describe('Board - Click to Create', () => {
     })
   })
 
-  it('should create sticky note on click', () => {
+  it('should create sticky note on double-click', () => {
+    render(<Board />)
+    const boardCanvas = screen.getByTestId('board-canvas')
+    
+    fireEvent.doubleClick(boardCanvas, {
+      clientX: 150,
+      clientY: 250,
+    })
+    
+    expect(mockAddSticky).toHaveBeenCalled()
+  })
+
+  it('should not create sticky note on single click', () => {
     render(<Board />)
     const boardCanvas = screen.getByTestId('board-canvas')
     
@@ -31,7 +43,7 @@ describe('Board - Click to Create', () => {
       clientY: 250,
     })
     
-    expect(mockAddSticky).toHaveBeenCalled()
+    expect(mockAddSticky).not.toHaveBeenCalled()
   })
 
   it('should render existing sticky notes', () => {

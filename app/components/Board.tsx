@@ -17,6 +17,8 @@ export default function Board() {
   const [hasDragged, setHasDragged] = useState(false)
   const [selectedStickyId, setSelectedStickyId] = useState<string | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
+  const canvasSize = 10000 // Large canvas for open world
+  const initialOffset = canvasSize / 2 // Center the view
   
   // Load saved view state after mount
   useEffect(() => {
@@ -29,20 +31,30 @@ export default function Board() {
       } catch (e) {
         console.error('Failed to load view state:', e)
       }
+    } else {
+      // Center the view on initial load
+      const centerX = window.innerWidth / 2 - initialOffset
+      const centerY = window.innerHeight / 2 - initialOffset
+      setPosition({ x: centerX, y: centerY })
     }
   }, [])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Only create sticky if clicking directly on the board canvas and not dragging
-    if ((e.target as HTMLElement).dataset.testid === 'board-canvas' && !hasDragged) {
+    // Deselect any selected sticky when clicking on board
+    if ((e.target as HTMLElement).dataset.testid === 'board-canvas') {
+      setSelectedStickyId(null)
+    }
+  }
+
+  const handleBoardDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Create sticky on double-click
+    if ((e.target as HTMLElement).dataset.testid === 'board-canvas') {
       const rect = boardRef.current?.getBoundingClientRect()
       if (rect) {
         const x = (e.clientX - rect.left - position.x) / scale
         const y = (e.clientY - rect.top - position.y) / scale
         addSticky(x, y)
       }
-      // Deselect any selected sticky when clicking on board
-      setSelectedStickyId(null)
     }
   }
 
@@ -58,9 +70,19 @@ export default function Board() {
     setMouseDownPos({ x: e.clientX, y: e.clientY })
     setHasDragged(false)
     
-    // Pan on middle button, shift+click, or clicking on the board itself
-    if (e.button === 1 || (e.button === 0 && e.shiftKey) || 
-        (e.button === 0 && (e.target as HTMLElement).dataset.testid === 'board-canvas')) {
+    // Check if clicking on board or board-canvas (not on a sticky note or UI element)
+    const target = e.target as HTMLElement
+    const isBoard = target.dataset.testid === 'board' || target.dataset.testid === 'board-canvas'
+    const isBackground = isBoard || target.closest('[data-testid="board"]') === boardRef.current
+    
+    // Allow panning with left click on background
+    if (isBackground && e.button === 0 && !target.closest('[data-testid="sticky-note"]')) {
+      e.preventDefault()
+      setIsPanning(true)
+      setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+    }
+    // Also allow middle button or shift+click anywhere
+    else if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
       e.preventDefault()
       setIsPanning(true)
       setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
@@ -141,6 +163,7 @@ export default function Board() {
         isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       onClick={handleBoardClick}
+      onDoubleClick={handleBoardDoubleClick}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -151,8 +174,10 @@ export default function Board() {
     >
       <div
         data-testid="board-canvas"
-        className="absolute inset-0"
+        className="absolute"
         style={{
+          width: `${canvasSize}px`,
+          height: `${canvasSize}px`,
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
           transformOrigin: '0 0',
         }}

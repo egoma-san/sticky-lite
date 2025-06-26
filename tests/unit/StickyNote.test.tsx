@@ -7,6 +7,14 @@ describe('StickyNote', () => {
   const mockOnDelete = jest.fn()
   const mockOnSelect = jest.fn()
 
+  // Mock Audio API for tests
+  beforeAll(() => {
+    global.Audio = jest.fn().mockImplementation(() => ({
+      play: jest.fn().mockResolvedValue(undefined),
+      volume: 0.3,
+    })) as any
+  })
+
   const defaultProps = {
     id: 'test-id',
     x: 100,
@@ -52,5 +60,37 @@ describe('StickyNote', () => {
     const stickyNote = screen.getByTestId('sticky-note')
     
     expect(stickyNote).toHaveAttribute('draggable', 'true')
+  })
+
+  it('should not delete when pressing delete/backspace while typing in textarea', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    const textarea = screen.getByDisplayValue('Test note')
+    
+    // Focus the textarea
+    fireEvent.focus(textarea)
+    
+    // Press delete key while textarea is focused
+    fireEvent.keyDown(window, { key: 'Delete' })
+    
+    // Should not call onDelete
+    expect(mockOnDelete).not.toHaveBeenCalled()
+    
+    // Press backspace key while textarea is focused
+    fireEvent.keyDown(window, { key: 'Backspace' })
+    
+    // Still should not call onDelete
+    expect(mockOnDelete).not.toHaveBeenCalled()
+  })
+
+  it('should delete when pressing delete/backspace while not typing', async () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    // Press delete key when textarea is not focused
+    fireEvent.keyDown(window, { key: 'Delete' })
+    
+    // Wait for the crumple animation
+    await new Promise(resolve => setTimeout(resolve, 350))
+    
+    expect(mockOnDelete).toHaveBeenCalledWith('test-id')
   })
 })
