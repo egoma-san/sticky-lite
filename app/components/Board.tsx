@@ -6,7 +6,7 @@ import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 
 export default function Board() {
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky } = useStickyStore()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky, deleteMultiple } = useStickyStore()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -15,7 +15,10 @@ export default function Board() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [mouseDownPos, setMouseDownPos] = useState({ x: 0, y: 0 })
   const [hasDragged, setHasDragged] = useState(false)
-  const [selectedStickyId, setSelectedStickyId] = useState<string | null>(null)
+  const [selectedStickyIds, setSelectedStickyIds] = useState<Set<string>>(new Set())
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectionBox, setSelectionBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -76,7 +79,7 @@ export default function Board() {
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Deselect any selected sticky when clicking on board
     if ((e.target as HTMLElement).dataset.testid === 'board-canvas') {
-      setSelectedStickyId(null)
+      setSelectedStickyIds(new Set())
     }
   }
 
@@ -134,14 +137,26 @@ export default function Board() {
     const isBoard = target.dataset.testid === 'board' || target.dataset.testid === 'board-canvas'
     const isBackground = isBoard || target.closest('[data-testid="board"]') === boardRef.current
     
-    // Allow panning with left click on background
-    if (isBackground && e.button === 0 && !target.closest('[data-testid="sticky-note"]')) {
+    // Start selection box with shift+drag on background
+    if (isBackground && e.button === 0 && e.shiftKey && !target.closest('[data-testid="sticky-note"]')) {
+      e.preventDefault()
+      const rect = boardRef.current?.getBoundingClientRect()
+      if (rect) {
+        const startX = e.clientX - rect.left
+        const startY = e.clientY - rect.top
+        setIsSelecting(true)
+        setSelectionStart({ x: startX, y: startY })
+        setSelectionBox({ x: startX, y: startY, width: 0, height: 0 })
+      }
+    }
+    // Allow panning with left click on background (without shift)
+    else if (isBackground && e.button === 0 && !e.shiftKey && !target.closest('[data-testid="sticky-note"]')) {
       e.preventDefault()
       setIsPanning(true)
       setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
     }
-    // Also allow middle button or shift+click anywhere
-    else if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+    // Also allow middle button anywhere
+    else if (e.button === 1) {
       e.preventDefault()
       setIsPanning(true)
       setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y })
@@ -165,11 +180,44 @@ export default function Board() {
       }
       const constrainedPos = constrainPosition(newPos, scale)
       setPosition(constrainedPos)
+    } else if (isSelecting && boardRef.current) {
+      const rect = boardRef.current.getBoundingClientRect()
+      const currentX = e.clientX - rect.left
+      const currentY = e.clientY - rect.top
+      
+      // Calculate selection box
+      const x = Math.min(selectionStart.x, currentX)
+      const y = Math.min(selectionStart.y, currentY)
+      const width = Math.abs(currentX - selectionStart.x)
+      const height = Math.abs(currentY - selectionStart.y)
+      
+      setSelectionBox({ x, y, width, height })
+      
+      // Check which stickies are in the selection box
+      const selectedIds = new Set<string>()
+      stickies.forEach(sticky => {
+        const stickyScreenX = sticky.x * scale + position.x
+        const stickyScreenY = sticky.y * scale + position.y
+        const stickyWidth = 192 * scale // 48 * 4 (w-48 in tailwind is 12rem = 192px)
+        const stickyHeight = 192 * scale
+        
+        // Check if sticky intersects with selection box
+        if (stickyScreenX + stickyWidth >= x &&
+            stickyScreenX <= x + width &&
+            stickyScreenY + stickyHeight >= y &&
+            stickyScreenY <= y + height) {
+          selectedIds.add(sticky.id)
+        }
+      })
+      
+      setSelectedStickyIds(selectedIds)
     }
   }
 
   const handleMouseUp = () => {
     setIsPanning(false)
+    setIsSelecting(false)
+    setSelectionBox(null)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -209,12 +257,26 @@ export default function Board() {
       if (e.code === 'Space') {
         e.preventDefault()
       }
-      // Delete key is handled by the StickyNote component itself
+      
+      // Handle delete/backspace for multiple selected notes
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0) {
+        // Don't delete if the user is typing in a textarea or input
+        const activeElement = document.activeElement
+        if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+          return
+        }
+        e.preventDefault()
+        
+        // Delete all selected sticky notes
+        const idsToDelete = Array.from(selectedStickyIds)
+        deleteMultiple(idsToDelete)
+        setSelectedStickyIds(new Set())
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedStickyId, deleteSticky])
+  }, [selectedStickyIds, deleteMultiple])
 
   return (
     <div 
@@ -250,20 +312,55 @@ export default function Board() {
             x={sticky.x}
             y={sticky.y}
             text={sticky.text}
-            isSelected={selectedStickyId === sticky.id}
-            onSelect={() => setSelectedStickyId(sticky.id)}
+            isSelected={selectedStickyIds.has(sticky.id)}
+            onSelect={(e?: React.MouseEvent) => {
+              // If shift is not held, clear other selections
+              if (!e || !e.shiftKey) {
+                setSelectedStickyIds(new Set([sticky.id]))
+              } else {
+                // Toggle selection with shift held
+                const newSelection = new Set(selectedStickyIds)
+                if (newSelection.has(sticky.id)) {
+                  newSelection.delete(sticky.id)
+                } else {
+                  newSelection.add(sticky.id)
+                }
+                setSelectedStickyIds(newSelection)
+              }
+            }}
             onTextChange={updateStickyText}
             onPositionChange={updateStickyPosition}
             onDelete={deleteSticky}
           />
         ))}
       </div>
+      
+      {/* Selection box */}
+      {selectionBox && (
+        <div
+          className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-10 pointer-events-none"
+          style={{
+            left: `${selectionBox.x}px`,
+            top: `${selectionBox.y}px`,
+            width: `${selectionBox.width}px`,
+            height: `${selectionBox.height}px`,
+          }}
+        />
+      )}
+      
       <TrashZone 
-        onDrop={deleteSticky} 
+        onDrop={(id) => {
+          deleteSticky(id)
+          // Remove from selection if it was selected
+          const newSelection = new Set(selectedStickyIds)
+          newSelection.delete(id)
+          setSelectedStickyIds(newSelection)
+        }} 
         onDeleteSelected={() => {
-          if (selectedStickyId) {
-            deleteSticky(selectedStickyId)
-            setSelectedStickyId(null)
+          if (selectedStickyIds.size > 0) {
+            const idsToDelete = Array.from(selectedStickyIds)
+            deleteMultiple(idsToDelete)
+            setSelectedStickyIds(new Set())
           }
         }}
       />

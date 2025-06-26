@@ -8,7 +8,7 @@ interface StickyNoteProps {
   y: number
   text: string
   isSelected: boolean
-  onSelect: () => void
+  onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
   onDelete: (id: string) => void
@@ -50,7 +50,7 @@ export default function StickyNote({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    onSelect()
+    onSelect(e)
   }
 
   const handleDelete = useCallback(() => {
@@ -163,9 +163,9 @@ export default function StickyNote({
           placeholder="メモを入力..."
           onClick={(e) => {
             e.stopPropagation()
-            onSelect()
+            onSelect(e)
           }}
-          onFocus={onSelect}
+          onFocus={() => onSelect()}
         />
       </div>
     </div>

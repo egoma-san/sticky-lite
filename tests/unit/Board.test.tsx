@@ -8,6 +8,7 @@ jest.mock('@/app/store/useStickyStore')
 describe('Board', () => {
   const mockAddSticky = jest.fn()
   const mockDeleteSticky = jest.fn()
+  const mockDeleteMultiple = jest.fn()
   const mockUpdateStickyText = jest.fn()
   const mockUpdateStickyPosition = jest.fn()
   
@@ -22,6 +23,7 @@ describe('Board', () => {
       stickies: mockStickies,
       addSticky: mockAddSticky,
       deleteSticky: mockDeleteSticky,
+      deleteMultiple: mockDeleteMultiple,
       updateStickyText: mockUpdateStickyText,
       updateStickyPosition: mockUpdateStickyPosition,
     })
@@ -56,8 +58,8 @@ describe('Board', () => {
     const trashButton = screen.getByTestId('trash-zone')
     fireEvent.click(trashButton)
     
-    // Verify deleteSticky was called with the selected sticky's id
-    expect(mockDeleteSticky).toHaveBeenCalledWith('test-1')
+    // Verify deleteMultiple was called with the selected sticky's id
+    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
   })
 
   it('should not delete anything when trash is clicked with no selection', () => {
@@ -115,7 +117,25 @@ describe('Board', () => {
     const trashButton = screen.getByTestId('trash-zone')
     fireEvent.click(trashButton)
     
-    // Verify delete was called with the correct id
-    expect(mockDeleteSticky).toHaveBeenCalledWith('test-1')
+    // Verify deleteMultiple was called with the correct id
+    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
+  })
+
+  it('should delete multiple selected stickies with keyboard', () => {
+    render(<Board />)
+    
+    // Select first sticky note
+    const stickyNote1 = screen.getByText('Test Note 1').closest('[data-testid="sticky-note"]')
+    fireEvent.click(stickyNote1!)
+    
+    // Select second sticky note with shift
+    const stickyNote2 = screen.getByText('Test Note 2').closest('[data-testid="sticky-note"]')
+    fireEvent.click(stickyNote2!, { shiftKey: true })
+    
+    // Press delete key
+    fireEvent.keyDown(window, { key: 'Delete' })
+    
+    // Verify deleteMultiple was called with both ids
+    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1', 'test-2'])
   })
 })

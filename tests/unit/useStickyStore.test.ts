@@ -93,4 +93,25 @@ describe('useStickyStore', () => {
 
     expect(result.current.stickies).toHaveLength(0)
   })
+
+  it('should delete multiple stickies', () => {
+    const { result } = renderHook(() => useStickyStore())
+    
+    act(() => {
+      result.current.addSticky(100, 200)
+      result.current.addSticky(300, 400)
+      result.current.addSticky(500, 600)
+    })
+
+    expect(result.current.stickies).toHaveLength(3)
+    const idsToDelete = [result.current.stickies[0].id, result.current.stickies[2].id]
+
+    act(() => {
+      result.current.deleteMultiple(idsToDelete)
+    })
+
+    expect(result.current.stickies).toHaveLength(1)
+    expect(result.current.stickies[0].x).toBe(300)
+    expect(result.current.stickies[0].y).toBe(400)
+  })
 })

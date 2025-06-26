@@ -15,6 +15,7 @@ interface StickyStore {
   updateStickyText: (id: string, text: string) => void
   updateStickyPosition: (id: string, x: number, y: number) => void
   deleteSticky: (id: string) => void
+  deleteMultiple: (ids: string[]) => void
   clearAll: () => void
 }
 
@@ -49,6 +50,10 @@ export const useStickyStore = create<StickyStore>()(
       
       deleteSticky: (id) => set((state) => ({
         stickies: state.stickies.filter(sticky => sticky.id !== id)
+      })),
+      
+      deleteMultiple: (ids) => set((state) => ({
+        stickies: state.stickies.filter(sticky => !ids.includes(sticky.id))
       })),
       
       clearAll: () => set({ stickies: [] })
