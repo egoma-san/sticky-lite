@@ -3,7 +3,7 @@ export { default as Board } from './components/Board'
 export { default as StickyNote } from './components/StickyNote'
 export { default as TrashZone } from './components/TrashZone'
 export { default as AddStickyButton } from './components/AddStickyButton'
-export { default as ZoomSlider } from './components/ZoomSlider'
+export { default as ZoomControls } from './components/ZoomControls'
 
 // Store
 export { useStickyStore } from './store/useStickyStore'

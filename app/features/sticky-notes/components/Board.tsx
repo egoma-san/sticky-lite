@@ -5,7 +5,7 @@ import { useStickyStore } from '../store/useStickyStore'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
-import ZoomSlider from './ZoomSlider'
+import ZoomControls from './ZoomControls'
 
 export default function Board() {
   const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky, deleteMultiple } = useStickyStore()
@@ -116,7 +116,7 @@ export default function Board() {
       // Calculate new scale with minimum constraint
       const delta = e.deltaY > 0 ? 0.9 : 1.1
       const minScale = getMinScale()
-      const newScale = Math.min(Math.max(minScale, scale * delta), 1.5)
+      const newScale = Math.min(Math.max(minScale, scale * delta), 2.0)
       
       // Calculate new position to keep the same canvas point under mouse
       const newPos = {
@@ -417,11 +417,11 @@ export default function Board() {
         }}
       />
       
-      {/* Zoom slider */}
-      <ZoomSlider 
+      {/* Zoom controls */}
+      <ZoomControls 
         scale={scale}
         minScale={getMinScale()}
-        maxScale={1.5}
+        maxScale={2.0}
         onScaleChange={(newScale) => {
           const rect = boardRef.current?.getBoundingClientRect()
           if (!rect) return
