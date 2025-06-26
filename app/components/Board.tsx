@@ -285,7 +285,7 @@ export default function Board() {
       ref={boardRef}
       data-testid="board"
       className={`w-full h-screen bg-gray-100 relative overflow-hidden ${
-        isPanning ? 'cursor-grabbing' : 'cursor-grab'
+        isSelecting ? 'cursor-crosshair' : isPanning ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       onClick={handleBoardClick}
       onDoubleClick={handleBoardDoubleClick}
