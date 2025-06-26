@@ -8,6 +8,7 @@ interface StickyNoteProps {
   y: number
   text: string
   isSelected: boolean
+  hasMultipleSelection?: boolean
   onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
@@ -20,6 +21,7 @@ export default function StickyNote({
   y,
   text,
   isSelected,
+  hasMultipleSelection = false,
   onSelect,
   onTextChange,
   onPositionChange,
@@ -31,8 +33,8 @@ export default function StickyNote({
   const noteRef = useRef<HTMLDivElement>(null)
 
   const handleDragStart = (e: React.DragEvent) => {
-    // Prevent dragging when shift is held
-    if (e.shiftKey) {
+    // Prevent dragging when shift is held or when part of multiple selection
+    if (e.shiftKey || (isSelected && hasMultipleSelection)) {
       e.preventDefault()
       return
     }
@@ -92,6 +94,7 @@ export default function StickyNote({
   return (
     <div
       ref={noteRef}
+      id={id}
       data-testid="sticky-note"
       className={`absolute w-48 h-48 cursor-move transition-all duration-300 ${
         isDragging ? 'opacity-50' : ''

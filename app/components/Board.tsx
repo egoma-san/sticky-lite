@@ -19,6 +19,8 @@ export default function Board() {
   const [isSelecting, setIsSelecting] = useState(false)
   const [selectionBox, setSelectionBox] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
+  const [isMovingSelection, setIsMovingSelection] = useState(false)
+  const [moveStart, setMoveStart] = useState<{ x: number; y: number; positions: Map<string, { x: number; y: number }> } | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -77,8 +79,8 @@ export default function Board() {
   }, [])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Deselect any selected sticky when clicking on board
-    if ((e.target as HTMLElement).dataset.testid === 'board-canvas') {
+    // Only deselect when clicking on empty background (not when dragging)
+    if ((e.target as HTMLElement).dataset.testid === 'board-canvas' && !hasDragged) {
       setSelectedStickyIds(new Set())
     }
   }
@@ -148,8 +150,36 @@ export default function Board() {
     
     // Check if clicking on board or board-canvas (not on a sticky note or UI element)
     const target = e.target as HTMLElement
-    const clickedOnSticky = !!target.closest('[data-testid="sticky-note"]')
+    const stickyElement = target.closest('[data-testid="sticky-note"]')
+    const clickedOnSticky = !!stickyElement
     const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
+    
+    // If clicking on a selected sticky without shift, start moving all selected stickies
+    if (clickedOnSticky && e.button === 0 && !e.shiftKey) {
+      const stickyId = stickyElement.id || ''
+      if (selectedStickyIds.has(stickyId) && selectedStickyIds.size > 0) {
+        e.preventDefault()
+        setIsMovingSelection(true)
+        
+        // Store initial positions of all selected stickies
+        const positions = new Map<string, { x: number; y: number }>()
+        stickies.forEach(sticky => {
+          if (selectedStickyIds.has(sticky.id)) {
+            positions.set(sticky.id, { x: sticky.x, y: sticky.y })
+          }
+        })
+        
+        const rect = boardRef.current?.getBoundingClientRect()
+        if (rect) {
+          setMoveStart({
+            x: (e.clientX - rect.left - position.x) / scale,
+            y: (e.clientY - rect.top - position.y) / scale,
+            positions
+          })
+        }
+        return
+      }
+    }
     
     // Allow panning with left click on background (without shift)
     if (e.button === 0 && !clickedOnSticky && !clickedOnUI) {
@@ -213,6 +243,18 @@ export default function Board() {
       })
       
       setSelectedStickyIds(selectedIds)
+    } else if (isMovingSelection && moveStart && boardRef.current) {
+      const rect = boardRef.current.getBoundingClientRect()
+      const currentX = (e.clientX - rect.left - position.x) / scale
+      const currentY = (e.clientY - rect.top - position.y) / scale
+      
+      const deltaX = currentX - moveStart.x
+      const deltaY = currentY - moveStart.y
+      
+      // Update positions of all selected stickies
+      moveStart.positions.forEach((originalPos, stickyId) => {
+        updateStickyPosition(stickyId, originalPos.x + deltaX, originalPos.y + deltaY)
+      })
     }
   }
 
@@ -220,6 +262,8 @@ export default function Board() {
     setIsPanning(false)
     setIsSelecting(false)
     setSelectionBox(null)
+    setIsMovingSelection(false)
+    setMoveStart(null)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -315,6 +359,7 @@ export default function Board() {
             y={sticky.y}
             text={sticky.text}
             isSelected={selectedStickyIds.has(sticky.id)}
+            hasMultipleSelection={selectedStickyIds.size > 1}
             onSelect={(e?: React.MouseEvent) => {
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
