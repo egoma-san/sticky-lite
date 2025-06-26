@@ -20,14 +20,48 @@ export default function Board() {
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
   
+  // Calculate minimum scale to prevent showing outside canvas
+  const getMinScale = () => {
+    if (!boardRef.current) return 0.1
+    const rect = boardRef.current.getBoundingClientRect()
+    const minScaleX = rect.width / canvasSize
+    const minScaleY = rect.height / canvasSize
+    return Math.max(minScaleX, minScaleY, 0.1)
+  }
+  
+  // Constrain position to keep canvas in view
+  const constrainPosition = (pos: { x: number; y: number }, currentScale: number) => {
+    if (!boardRef.current) return pos
+    const rect = boardRef.current.getBoundingClientRect()
+    
+    // Calculate bounds
+    const minX = rect.width - canvasSize * currentScale
+    const maxX = 0
+    const minY = rect.height - canvasSize * currentScale
+    const maxY = 0
+    
+    return {
+      x: Math.min(Math.max(pos.x, minX), maxX),
+      y: Math.min(Math.max(pos.y, minY), maxY)
+    }
+  }
+  
   // Load saved view state after mount
   useEffect(() => {
     const saved = localStorage.getItem('board-view-state')
     if (saved) {
       try {
         const viewState = JSON.parse(saved)
-        if (viewState.scale) setScale(viewState.scale)
-        if (viewState.position) setPosition(viewState.position)
+        if (viewState.scale) {
+          const minScale = getMinScale()
+          const constrainedScale = Math.max(minScale, viewState.scale)
+          setScale(constrainedScale)
+          
+          if (viewState.position) {
+            const constrainedPos = constrainPosition(viewState.position, constrainedScale)
+            setPosition(constrainedPos)
+          }
+        }
       } catch (e) {
         console.error('Failed to load view state:', e)
       }
@@ -72,16 +106,22 @@ export default function Board() {
       const canvasX = (mouseX - position.x) / scale
       const canvasY = (mouseY - position.y) / scale
       
-      // Calculate new scale
+      // Calculate new scale with minimum constraint
       const delta = e.deltaY > 0 ? 0.9 : 1.1
-      const newScale = Math.min(Math.max(0.1, scale * delta), 3)
+      const minScale = getMinScale()
+      const newScale = Math.min(Math.max(minScale, scale * delta), 3)
       
       // Calculate new position to keep the same canvas point under mouse
-      const newX = mouseX - canvasX * newScale
-      const newY = mouseY - canvasY * newScale
+      const newPos = {
+        x: mouseX - canvasX * newScale,
+        y: mouseY - canvasY * newScale
+      }
+      
+      // Constrain position to keep canvas in view
+      const constrainedPos = constrainPosition(newPos, newScale)
       
       setScale(newScale)
-      setPosition({ x: newX, y: newY })
+      setPosition(constrainedPos)
     }
   }
 
@@ -119,10 +159,12 @@ export default function Board() {
     }
     
     if (isPanning) {
-      setPosition({
+      const newPos = {
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
-      })
+      }
+      const constrainedPos = constrainPosition(newPos, scale)
+      setPosition(constrainedPos)
     }
   }
 
@@ -250,14 +292,20 @@ export default function Board() {
             const canvasY = (centerY - position.y) / scale
             
             // Calculate new scale
+            const minScale = getMinScale()
             const newScale = Math.min(3, scale * 1.2)
             
             // Calculate new position to keep the same canvas point at center
-            const newX = centerX - canvasX * newScale
-            const newY = centerY - canvasY * newScale
+            const newPos = {
+              x: centerX - canvasX * newScale,
+              y: centerY - canvasY * newScale
+            }
+            
+            // Constrain position to keep canvas in view
+            const constrainedPos = constrainPosition(newPos, newScale)
             
             setScale(newScale)
-            setPosition({ x: newX, y: newY })
+            setPosition(constrainedPos)
           }}
         >
           <span 
@@ -302,15 +350,21 @@ export default function Board() {
             const canvasX = (centerX - position.x) / scale
             const canvasY = (centerY - position.y) / scale
             
-            // Calculate new scale
-            const newScale = Math.max(0.1, scale * 0.8)
+            // Calculate new scale with minimum constraint
+            const minScale = getMinScale()
+            const newScale = Math.max(minScale, scale * 0.8)
             
             // Calculate new position to keep the same canvas point at center
-            const newX = centerX - canvasX * newScale
-            const newY = centerY - canvasY * newScale
+            const newPos = {
+              x: centerX - canvasX * newScale,
+              y: centerY - canvasY * newScale
+            }
+            
+            // Constrain position to keep canvas in view
+            const constrainedPos = constrainPosition(newPos, newScale)
             
             setScale(newScale)
-            setPosition({ x: newX, y: newY })
+            setPosition(constrainedPos)
           }}
         >
           <span 
