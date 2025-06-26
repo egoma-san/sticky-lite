@@ -20,6 +20,7 @@ describe('StickyNote', () => {
     x: 100,
     y: 200,
     text: 'Test note',
+    color: 'yellow' as const,
     isSelected: false,
     onSelect: mockOnSelect,
     onTextChange: mockOnTextChange,

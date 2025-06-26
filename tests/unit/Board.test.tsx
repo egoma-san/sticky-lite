@@ -13,14 +13,16 @@ describe('Board', () => {
   const mockUpdateStickyPosition = jest.fn()
   
   const mockStickies = [
-    { id: 'test-1', x: 100, y: 100, text: 'Test Note 1', createdAt: new Date() },
-    { id: 'test-2', x: 200, y: 200, text: 'Test Note 2', createdAt: new Date() }
+    { id: 'test-1', x: 100, y: 100, text: 'Test Note 1', color: 'yellow' as const, createdAt: new Date() },
+    { id: 'test-2', x: 200, y: 200, text: 'Test Note 2', color: 'yellow' as const, createdAt: new Date() }
   ]
 
   beforeEach(() => {
     jest.clearAllMocks()
     ;(useStickyStore as unknown as jest.Mock).mockReturnValue({
       stickies: mockStickies,
+      selectedColor: 'yellow',
+      setSelectedColor: jest.fn(),
       addSticky: mockAddSticky,
       deleteSticky: mockDeleteSticky,
       deleteMultiple: mockDeleteMultiple,

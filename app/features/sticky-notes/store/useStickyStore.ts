@@ -1,13 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Sticky, StickyStore } from '../types'
+import { Sticky, StickyStore, StickyColor } from '../types'
 
 export const useStickyStore = create<StickyStore>()(
   persist(
     (set) => ({
       stickies: [],
+      selectedColor: 'yellow' as StickyColor,
       
-      addSticky: (x, y) => set((state) => ({
+      setSelectedColor: (color) => set({ selectedColor: color }),
+      
+      addSticky: (x, y, color) => set((state) => ({
         stickies: [...state.stickies, {
           id: typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function'
             ? crypto.randomUUID() 
@@ -15,6 +18,7 @@ export const useStickyStore = create<StickyStore>()(
           x,
           y,
           text: '',
+          color: color || state.selectedColor,
           createdAt: new Date()
         }]
       })),

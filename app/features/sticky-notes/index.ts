@@ -2,9 +2,10 @@
 export { default as Board } from './components/Board'
 export { default as StickyNote } from './components/StickyNote'
 export { default as TrashZone } from './components/TrashZone'
+export { default as AddStickyButton } from './components/AddStickyButton'
 
 // Store
 export { useStickyStore } from './store/useStickyStore'
 
 // Types
-export type { Sticky, StickyStore } from './types'
+export type { Sticky, StickyStore, StickyColor } from './types'

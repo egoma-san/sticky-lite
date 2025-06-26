@@ -2,11 +2,14 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 
+import { StickyColor } from '../types'
+
 interface StickyNoteProps {
   id: string
   x: number
   y: number
   text: string
+  color: StickyColor
   isSelected: boolean
   hasMultipleSelection?: boolean
   onSelect: (e?: React.MouseEvent) => void
@@ -20,6 +23,7 @@ export default function StickyNote({
   x,
   y,
   text,
+  color,
   isSelected,
   hasMultipleSelection = false,
   onSelect,
@@ -33,6 +37,32 @@ export default function StickyNote({
   const [isEditing, setIsEditing] = useState(false)
   const noteRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const getGradientColors = () => {
+    switch (color) {
+      case 'blue':
+        return {
+          light: '#dbeafe',
+          medium: '#bfdbfe',
+          dark: '#93c5fd'
+        }
+      case 'pink':
+        return {
+          light: '#fce7f3',
+          medium: '#fbcfe8',
+          dark: '#f9a8d4'
+        }
+      case 'yellow':
+      default:
+        return {
+          light: '#fef3c7',
+          medium: '#fde68a',
+          dark: '#fcd34d'
+        }
+    }
+  }
+
+  const gradientColors = getGradientColors()
 
   const handleDragStart = (e: React.DragEvent) => {
     // Prevent dragging when shift is held or when part of multiple selection
@@ -148,7 +178,11 @@ export default function StickyNote({
       onDoubleClick={handleDoubleClick}
     >
       {/* Main sticky note body */}
-      <div className={`relative w-full h-full bg-yellow-300 shadow-md overflow-hidden ${
+      <div className={`relative w-full h-full shadow-md overflow-hidden ${
+        color === 'yellow' ? 'bg-yellow-300' : 
+        color === 'blue' ? 'bg-blue-300' : 
+        color === 'pink' ? 'bg-pink-300' : 'bg-yellow-300'
+      } ${
         isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
       } ${!isDragging ? 'hover:shadow-lg' : 'shadow-xl'}`}>
         {/* Folded corner - bottom right with curved design */}
@@ -164,13 +198,13 @@ export default function StickyNote({
             <defs>
               <linearGradient id={`foldShadow-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="transparent" />
-                <stop offset="50%" stopColor="rgba(251, 191, 36, 0.1)" />
-                <stop offset="100%" stopColor="rgba(217, 119, 6, 0.3)" />
+                <stop offset="50%" stopColor={`${gradientColors.medium}33`} />
+                <stop offset="100%" stopColor={`${gradientColors.dark}66`} />
               </linearGradient>
               <linearGradient id={`foldFront-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#fef3c7" />
-                <stop offset="50%" stopColor="#fde68a" />
-                <stop offset="100%" stopColor="#fcd34d" />
+                <stop offset="0%" stopColor={gradientColors.light} />
+                <stop offset="50%" stopColor={gradientColors.medium} />
+                <stop offset="100%" stopColor={gradientColors.dark} />
               </linearGradient>
               <filter id={`foldBlur-${id}`}>
                 <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />

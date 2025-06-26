@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useStickyStore } from '../store/useStickyStore'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
+import AddStickyButton from './AddStickyButton'
 
 export default function Board() {
   const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky, deleteMultiple } = useStickyStore()
@@ -358,6 +359,7 @@ export default function Board() {
             x={sticky.x}
             y={sticky.y}
             text={sticky.text}
+            color={sticky.color}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             onSelect={(e?: React.MouseEvent) => {
@@ -394,6 +396,8 @@ export default function Board() {
           }}
         />
       )}
+      
+      <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
       
       <TrashZone 
         onDrop={(id) => {

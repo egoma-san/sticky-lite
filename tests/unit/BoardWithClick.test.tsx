@@ -15,10 +15,13 @@ describe('Board - Click to Create', () => {
     jest.clearAllMocks()
     ;(useStickyStore as unknown as jest.Mock).mockReturnValue({
       stickies: [],
+      selectedColor: 'yellow',
+      setSelectedColor: jest.fn(),
       addSticky: mockAddSticky,
       updateStickyText: mockUpdateStickyText,
       updateStickyPosition: mockUpdateStickyPosition,
       deleteSticky: mockDeleteSticky,
+      deleteMultiple: jest.fn(),
     })
   })
 
@@ -49,13 +52,16 @@ describe('Board - Click to Create', () => {
   it('should render existing sticky notes', () => {
     ;(useStickyStore as unknown as jest.Mock).mockReturnValue({
       stickies: [
-        { id: '1', x: 100, y: 100, text: 'Note 1', createdAt: new Date() },
-        { id: '2', x: 200, y: 200, text: 'Note 2', createdAt: new Date() },
+        { id: '1', x: 100, y: 100, text: 'Note 1', color: 'yellow', createdAt: new Date() },
+        { id: '2', x: 200, y: 200, text: 'Note 2', color: 'yellow', createdAt: new Date() },
       ],
+      selectedColor: 'yellow',
+      setSelectedColor: jest.fn(),
       addSticky: mockAddSticky,
       updateStickyText: mockUpdateStickyText,
       updateStickyPosition: mockUpdateStickyPosition,
       deleteSticky: mockDeleteSticky,
+      deleteMultiple: jest.fn(),
     })
 
     render(<Board />)
