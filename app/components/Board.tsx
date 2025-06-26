@@ -61,8 +61,27 @@ export default function Board() {
   const handleWheel = (e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault()
+      const rect = boardRef.current?.getBoundingClientRect()
+      if (!rect) return
+      
+      // Get mouse position relative to board
+      const mouseX = e.clientX - rect.left
+      const mouseY = e.clientY - rect.top
+      
+      // Calculate the point on canvas where mouse is pointing (before zoom)
+      const canvasX = (mouseX - position.x) / scale
+      const canvasY = (mouseY - position.y) / scale
+      
+      // Calculate new scale
       const delta = e.deltaY > 0 ? 0.9 : 1.1
-      setScale((prevScale) => Math.min(Math.max(0.1, prevScale * delta), 3))
+      const newScale = Math.min(Math.max(0.1, scale * delta), 3)
+      
+      // Calculate new position to keep the same canvas point under mouse
+      const newX = mouseX - canvasX * newScale
+      const newY = mouseY - canvasY * newScale
+      
+      setScale(newScale)
+      setPosition({ x: newX, y: newY })
     }
   }
 
@@ -218,7 +237,28 @@ export default function Board() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
             border: '1px solid rgba(255, 255, 255, 0.5)',
           }}
-          onClick={() => setScale((s) => Math.min(3, s * 1.2))}
+          onClick={() => {
+            const rect = boardRef.current?.getBoundingClientRect()
+            if (!rect) return
+            
+            // Use center of viewport as zoom origin
+            const centerX = rect.width / 2
+            const centerY = rect.height / 2
+            
+            // Calculate the point on canvas at center (before zoom)
+            const canvasX = (centerX - position.x) / scale
+            const canvasY = (centerY - position.y) / scale
+            
+            // Calculate new scale
+            const newScale = Math.min(3, scale * 1.2)
+            
+            // Calculate new position to keep the same canvas point at center
+            const newX = centerX - canvasX * newScale
+            const newY = centerY - canvasY * newScale
+            
+            setScale(newScale)
+            setPosition({ x: newX, y: newY })
+          }}
         >
           <span 
             className="text-xl sm:text-2xl font-medium relative z-10"
@@ -250,7 +290,28 @@ export default function Board() {
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 2px 4px rgba(255, 255, 255, 0.9)',
             border: '1px solid rgba(255, 255, 255, 0.5)',
           }}
-          onClick={() => setScale((s) => Math.max(0.1, s * 0.8))}
+          onClick={() => {
+            const rect = boardRef.current?.getBoundingClientRect()
+            if (!rect) return
+            
+            // Use center of viewport as zoom origin
+            const centerX = rect.width / 2
+            const centerY = rect.height / 2
+            
+            // Calculate the point on canvas at center (before zoom)
+            const canvasX = (centerX - position.x) / scale
+            const canvasY = (centerY - position.y) / scale
+            
+            // Calculate new scale
+            const newScale = Math.max(0.1, scale * 0.8)
+            
+            // Calculate new position to keep the same canvas point at center
+            const newX = centerX - canvasX * newScale
+            const newY = centerY - canvasY * newScale
+            
+            setScale(newScale)
+            setPosition({ x: newX, y: newY })
+          }}
         >
           <span 
             className="text-xl sm:text-2xl font-medium relative z-10"
