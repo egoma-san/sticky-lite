@@ -30,7 +30,9 @@ export default function StickyNote({
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isCrumpling, setIsCrumpling] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const noteRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleDragStart = (e: React.DragEvent) => {
     // Prevent dragging when shift is held or when part of multiple selection
@@ -59,6 +61,15 @@ export default function StickyNote({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onSelect(e)
+  }
+  
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsEditing(true)
+    // Focus textarea after state update
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 0)
   }
 
   const handleDelete = useCallback(() => {
@@ -90,13 +101,35 @@ export default function StickyNote({
       return () => window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isSelected, id, handleDelete])
+  
+  // Handle clicking outside to exit edit mode
+  useEffect(() => {
+    if (isEditing) {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (noteRef.current && !noteRef.current.contains(e.target as Node)) {
+          setIsEditing(false)
+        }
+      }
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isEditing])
+  
+  // Exit edit mode when selection is lost
+  useEffect(() => {
+    if (!isSelected) {
+      setIsEditing(false)
+    }
+  }, [isSelected])
 
   return (
     <div
       ref={noteRef}
       id={id}
       data-testid="sticky-note"
-      className={`absolute w-48 h-48 cursor-move transition-all duration-300 ${
+      className={`absolute w-48 h-48 transition-all duration-300 ${
+        isEditing ? 'cursor-text' : 'cursor-move'
+      } ${
         isDragging ? 'opacity-50' : ''
       } ${isSelected ? 'z-10' : ''} ${
         isCrumpling ? 'animate-crumple' : ''
@@ -111,6 +144,7 @@ export default function StickyNote({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Main sticky note body */}
       <div className={`relative w-full h-full bg-yellow-300 shadow-md overflow-hidden ${
@@ -166,15 +200,22 @@ export default function StickyNote({
         </div>
         
         <textarea
-          className="w-full h-full bg-transparent resize-none outline-none text-gray-800 p-3 pb-10 pr-10"
+          ref={textareaRef}
+          className={`w-full h-full bg-transparent resize-none outline-none text-gray-800 p-3 pb-10 pr-10 ${
+            !isEditing ? 'pointer-events-none' : ''
+          }`}
           value={text}
           onChange={(e) => onTextChange(id, e.target.value)}
           placeholder="メモを入力..."
           onClick={(e) => {
             e.stopPropagation()
-            onSelect(e)
           }}
-          onFocus={() => onSelect()}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setIsEditing(true)
+          }}
+          onBlur={() => setIsEditing(false)}
+          readOnly={!isEditing}
         />
       </div>
     </div>
