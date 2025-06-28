@@ -9,6 +9,7 @@ import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
 import InfoButton from './InfoButton'
+import { isModifierKeyPressed } from '../utils/platform'
 
 function BoardContent() {
   const searchParams = useSearchParams()
@@ -162,7 +163,7 @@ function BoardContent() {
   }
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+    if (isModifierKeyPressed(e)) {
       e.preventDefault()
       const rect = boardRef.current?.getBoundingClientRect()
       if (!rect) return

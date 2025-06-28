@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 import { StickyColor } from '../types'
+import { isModifierKeyPressed } from '../utils/platform'
 
 interface StickyNoteProps {
   id: string
@@ -184,8 +185,8 @@ export default function StickyNote({
   useEffect(() => {
     if (isSelected && (isEditing || !hasMultipleSelection)) {
       const handleKeyDown = (e: KeyboardEvent) => {
-        // Check if Cmd/Ctrl is pressed
-        if (e.metaKey || e.ctrlKey) {
+        // Check if modifier key is pressed (Cmd on Mac, Ctrl on Windows)
+        if (isModifierKeyPressed(e)) {
           // Font size shortcuts (Word-style)
           if (e.shiftKey && e.key === '>') {
             e.preventDefault()

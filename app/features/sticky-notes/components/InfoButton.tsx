@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { formatShortcut } from '../utils/platform'
 
 export default function InfoButton() {
   const [showInfo, setShowInfo] = useState(false)
@@ -39,6 +40,10 @@ export default function InfoButton() {
                 </button>
               </div>
 
+              <div className="text-sm text-gray-500 mb-3">
+                プラットフォーム: {formatShortcut('Ctrl/Cmd').includes('Cmd') ? 'Mac' : 'Windows/Linux'}
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">付箋の操作</h3>
@@ -53,24 +58,24 @@ export default function InfoButton() {
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">テキストフォーマット</h3>
                   <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• <kbd>Ctrl/Cmd + B</kbd>: 太字</li>
-                    <li>• <kbd>Ctrl/Cmd + I</kbd>: イタリック</li>
-                    <li>• <kbd>Ctrl/Cmd + U</kbd>: アンダーライン</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + B')}</kbd>: 太字</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + I')}</kbd>: イタリック</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + U')}</kbd>: アンダーライン</li>
                   </ul>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">文字サイズ</h3>
                   <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• <kbd>Ctrl/Cmd + Shift + &gt;</kbd>: 文字を大きく</li>
-                    <li>• <kbd>Ctrl/Cmd + Shift + &lt;</kbd>: 文字を小さく</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + Shift + >')}</kbd>: 文字を大きく</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + Shift + <')}</kbd>: 文字を小さく</li>
                   </ul>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">ズーム</h3>
                   <ul className="space-y-1 text-sm text-gray-600">
-                    <li>• <kbd>Ctrl/Cmd + マウスホイール</kbd>: ズームイン/アウト</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd')} + マウスホイール</kbd>: ズームイン/アウト</li>
                     <li>• 左下のボタンでもズーム調整可能</li>
                   </ul>
                 </div>
