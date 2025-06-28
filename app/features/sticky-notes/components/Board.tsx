@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, Suspense } from 'react'
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useStickyStore } from '../store/useStickyStore'
@@ -27,6 +27,7 @@ function BoardContent() {
   const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
   const [isMovingSelection, setIsMovingSelection] = useState(false)
   const [moveStart, setMoveStart] = useState<{ x: number; y: number; positions: Map<string, { x: number; y: number }> } | null>(null)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -118,6 +119,27 @@ function BoardContent() {
       }
     }
   }, [focusId, stickies, scale])
+
+  // Play crumple sound and animate before deleting
+  const handleDeleteWithAnimation = useCallback((ids: string[]) => {
+    // Play crumple sound
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYmLjo+UmJmbnp+ipqirrrCztLW5vr7Awc')
+    audio.volume = 0.3
+    audio.play().catch(() => {})
+    
+    // Add to deleting set
+    setDeletingIds(new Set(ids))
+    
+    // Delete after animation
+    setTimeout(() => {
+      if (ids.length === 1) {
+        deleteSticky(ids[0])
+      } else {
+        deleteMultiple(ids)
+      }
+      setDeletingIds(new Set())
+    }, 300)
+  }, [deleteSticky, deleteMultiple])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only deselect when clicking on empty background (not when dragging)
@@ -359,16 +381,16 @@ function BoardContent() {
         }
         e.preventDefault()
         
-        // Delete all selected sticky notes
+        // Delete all selected sticky notes with animation
         const idsToDelete = Array.from(selectedStickyIds)
-        deleteMultiple(idsToDelete)
+        handleDeleteWithAnimation(idsToDelete)
         setSelectedStickyIds(new Set())
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedStickyIds, deleteMultiple])
+  }, [selectedStickyIds, handleDeleteWithAnimation])
 
   return (
     <div 
@@ -408,6 +430,7 @@ function BoardContent() {
             size={sticky.size || 1}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
+            isDeleting={deletingIds.has(sticky.id)}
             onSelect={(e?: React.MouseEvent) => {
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
@@ -459,7 +482,7 @@ function BoardContent() {
       
       <TrashZone 
         onDrop={(id) => {
-          deleteSticky(id)
+          handleDeleteWithAnimation([id])
           // Remove from selection if it was selected
           const newSelection = new Set(selectedStickyIds)
           newSelection.delete(id)
@@ -468,7 +491,7 @@ function BoardContent() {
         onDeleteSelected={() => {
           if (selectedStickyIds.size > 0) {
             const idsToDelete = Array.from(selectedStickyIds)
-            deleteMultiple(idsToDelete)
+            handleDeleteWithAnimation(idsToDelete)
             setSelectedStickyIds(new Set())
           }
         }}

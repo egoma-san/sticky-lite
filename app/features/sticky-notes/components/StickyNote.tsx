@@ -13,6 +13,7 @@ interface StickyNoteProps {
   size?: number
   isSelected: boolean
   hasMultipleSelection?: boolean
+  isDeleting?: boolean
   onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
@@ -29,6 +30,7 @@ export default function StickyNote({
   size = 1,
   isSelected,
   hasMultipleSelection = false,
+  isDeleting = false,
   onSelect,
   onTextChange,
   onPositionChange,
@@ -158,6 +160,13 @@ export default function StickyNote({
       setIsEditing(false)
     }
   }, [isSelected])
+
+  // Apply crumpling animation when marked for deletion
+  useEffect(() => {
+    if (isDeleting) {
+      setIsCrumpling(true)
+    }
+  }, [isDeleting])
 
   const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
     e.stopPropagation()

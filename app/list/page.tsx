@@ -8,6 +8,7 @@ import { useStickyStore } from '../features/sticky-notes'
 export default function ListPage() {
   const { stickies, deleteSticky, deleteMultiple } = useStickyStore()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
+  const [deletingIds, setDeletingIds] = React.useState<Set<string>>(new Set())
   const router = useRouter()
 
   const handleCheck = (id: string) => {
@@ -20,17 +21,38 @@ export default function ListPage() {
     setCheckedItems(newChecked)
   }
 
+  const handleDeleteWithAnimation = (ids: string[]) => {
+    // Play crumple sound
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYmLjo+UmJmbnp+ipqirrrCztLW5vr7Awc')
+    audio.volume = 0.3
+    audio.play().catch(() => {})
+    
+    // Add to deleting set
+    setDeletingIds(new Set(ids))
+    
+    // Delete after animation
+    setTimeout(() => {
+      if (ids.length === 1) {
+        deleteSticky(ids[0])
+      } else {
+        deleteMultiple(ids)
+      }
+      setDeletingIds(new Set())
+      
+      // Remove from checked items
+      const newChecked = new Set(checkedItems)
+      ids.forEach(id => newChecked.delete(id))
+      setCheckedItems(newChecked)
+    }, 300)
+  }
+
   const handleDelete = (id: string) => {
-    deleteSticky(id)
-    const newChecked = new Set(checkedItems)
-    newChecked.delete(id)
-    setCheckedItems(newChecked)
+    handleDeleteWithAnimation([id])
   }
 
   const handleDeleteSelected = () => {
     if (checkedItems.size > 0) {
-      deleteMultiple(Array.from(checkedItems))
-      setCheckedItems(new Set())
+      handleDeleteWithAnimation(Array.from(checkedItems))
     }
   }
 
@@ -127,7 +149,9 @@ export default function ListPage() {
               </thead>
               <tbody>
                 {sortedStickies.map((sticky) => (
-                  <tr key={sticky.id} className="border-b hover:bg-gray-50">
+                  <tr key={sticky.id} className={`border-b hover:bg-gray-50 transition-all duration-300 ${
+                    deletingIds.has(sticky.id) ? 'animate-crumple' : ''
+                  }`}>
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
