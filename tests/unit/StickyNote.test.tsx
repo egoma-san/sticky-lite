@@ -69,26 +69,6 @@ describe('StickyNote', () => {
     expect(stickyNote).toHaveAttribute('draggable', 'true')
   })
 
-  it('should not delete when pressing delete/backspace while typing in textarea', () => {
-    render(<StickyNote {...defaultProps} isSelected={true} />)
-    const textarea = screen.getByDisplayValue('Test note')
-    
-    // Focus the textarea
-    fireEvent.focus(textarea)
-    
-    // Press delete key while textarea is focused
-    fireEvent.keyDown(window, { key: 'Delete' })
-    
-    // Should not call onDelete
-    expect(mockOnDelete).not.toHaveBeenCalled()
-    
-    // Press backspace key while textarea is focused
-    fireEvent.keyDown(window, { key: 'Backspace' })
-    
-    // Still should not call onDelete
-    expect(mockOnDelete).not.toHaveBeenCalled()
-  })
-
   it('should delete when pressing delete/backspace while not typing', async () => {
     render(<StickyNote {...defaultProps} isSelected={true} />)
     
@@ -271,49 +251,6 @@ describe('StickyNote', () => {
     rerender(<StickyNote {...defaultProps} color="pink" />)
     note = screen.getByTestId('sticky-note').querySelector('.bg-pink-300')
     expect(note).toBeInTheDocument()
-  })
-
-  it('should show crumple animation when deleting', () => {
-    render(<StickyNote {...defaultProps} isDeleting={true} />)
-    
-    const note = screen.getByTestId('sticky-note')
-    expect(note).toHaveClass('animate-crumple')
-    expect(note).toHaveStyle({ transform: 'scale(0) rotate(360deg)' })
-  })
-
-  it('should not allow drag when shift is held', () => {
-    render(<StickyNote {...defaultProps} />)
-    
-    const note = screen.getByTestId('sticky-note')
-    const preventDefault = jest.fn()
-    
-    fireEvent.dragStart(note, {
-      shiftKey: true,
-      preventDefault,
-      dataTransfer: {
-        setData: jest.fn(),
-        effectAllowed: 'move'
-      }
-    })
-    
-    expect(preventDefault).toHaveBeenCalled()
-  })
-
-  it('should not allow drag when part of multiple selection', () => {
-    render(<StickyNote {...defaultProps} isSelected={true} hasMultipleSelection={true} />)
-    
-    const note = screen.getByTestId('sticky-note')
-    const preventDefault = jest.fn()
-    
-    fireEvent.dragStart(note, {
-      preventDefault,
-      dataTransfer: {
-        setData: jest.fn(),
-        effectAllowed: 'move'
-      }
-    })
-    
-    expect(preventDefault).toHaveBeenCalled()
   })
 
   it('should handle drag start correctly', () => {

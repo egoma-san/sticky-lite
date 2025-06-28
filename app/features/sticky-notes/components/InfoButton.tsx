@@ -45,6 +45,23 @@ export default function InfoButton() {
               </div>
 
               <div className="space-y-4">
+                {/* iPhone/タッチデバイス専用セクション */}
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-blue-800 mb-2">📱 iPhone/タッチデバイスでの操作</h3>
+                  <ul className="space-y-1 text-sm text-blue-700">
+                    <li>• <span className="font-semibold">ダブルタップ</span>: 付箋を作成</li>
+                    <li>• <span className="font-semibold">タップ</span>: 付箋を選択・編集</li>
+                    <li>• <span className="font-semibold">長押し＋ドラッグ</span>: 付箋を移動</li>
+                    <li>• <span className="font-semibold">ピンチ</span>: ズームイン/アウト</li>
+                    <li>• <span className="font-semibold">2本指スワイプ</span>: ボード全体を移動</li>
+                    <li>• <span className="font-semibold">ゴミ箱にドラッグ</span>: 付箋を削除</li>
+                    <li>• <span className="font-semibold">付箋の角をドラッグ</span>: サイズ変更</li>
+                  </ul>
+                  <div className="mt-2 text-xs text-blue-600">
+                    💡 外部キーボード接続時は下記のショートカットも使用可能
+                  </div>
+                </div>
+
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-2">付箋の操作</h3>
                   <ul className="space-y-1 text-sm text-gray-600">

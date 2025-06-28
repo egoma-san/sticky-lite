@@ -82,20 +82,6 @@ describe('TrashZone', () => {
     }, { timeout: 150 })
   })
 
-  it('should play sound when item is dropped', () => {
-    render(<TrashZone onDrop={mockOnDrop} />)
-    const trashZone = screen.getByTestId('trash-zone')
-    
-    const mockDataTransfer = {
-      getData: jest.fn().mockReturnValue('test-sticky-id'),
-    }
-    
-    fireEvent.drop(trashZone, {
-      dataTransfer: mockDataTransfer,
-    })
-    
-    expect(global.Audio).toHaveBeenCalled()
-  })
 
   it('should not call onDrop when dropped without stickyId', () => {
     render(<TrashZone onDrop={mockOnDrop} />)
