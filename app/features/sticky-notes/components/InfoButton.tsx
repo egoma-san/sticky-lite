@@ -10,7 +10,7 @@ export default function InfoButton() {
     <>
       {/* Info button */}
       <button
-        className="fixed top-4 right-24 sm:top-6 sm:right-28 md:top-8 md:right-32 w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center z-50"
+        className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center"
         onClick={() => setShowInfo(!showInfo)}
         title="ショートカット一覧"
       >
