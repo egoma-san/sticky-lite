@@ -219,6 +219,22 @@ describe('StickyNote', () => {
     expect(mockOnFontSizeChange).toHaveBeenCalledWith('1', 18)
   })
 
+  it('should handle alternative font size increase shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    fireEvent.keyDown(window, { key: '+', ctrlKey: true })
+    
+    expect(mockOnFontSizeChange).toHaveBeenCalledWith('1', 18)
+  })
+
+  it('should handle alternative font size decrease shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} fontSize={20} />)
+    
+    fireEvent.keyDown(window, { key: '-', ctrlKey: true })
+    
+    expect(mockOnFontSizeChange).toHaveBeenCalledWith('1', 18)
+  })
+
   it('should handle bold toggle shortcut', () => {
     render(<StickyNote {...defaultProps} isSelected={true} />)
     

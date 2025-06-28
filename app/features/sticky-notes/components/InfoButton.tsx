@@ -69,6 +69,9 @@ export default function InfoButton() {
                   <ul className="space-y-1 text-sm text-gray-600">
                     <li>• <kbd>{formatShortcut('Ctrl/Cmd + Shift + >')}</kbd>: 文字を大きく</li>
                     <li>• <kbd>{formatShortcut('Ctrl/Cmd + Shift + <')}</kbd>: 文字を小さく</li>
+                    <li className="text-xs text-gray-500 mt-1">または</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + +')}</kbd>: 文字を大きく</li>
+                    <li>• <kbd>{formatShortcut('Ctrl/Cmd + -')}</kbd>: 文字を小さく</li>
                   </ul>
                 </div>
 

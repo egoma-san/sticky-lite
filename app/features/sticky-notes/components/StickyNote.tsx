@@ -187,12 +187,23 @@ export default function StickyNote({
       const handleKeyDown = (e: KeyboardEvent) => {
         // Check if modifier key is pressed (Cmd on Mac, Ctrl on Windows)
         if (isModifierKeyPressed(e)) {
-          // Font size shortcuts (Word-style)
-          if (e.shiftKey && e.key === '>') {
+          // Font size shortcuts
+          // Check for multiple key combinations for better compatibility
+          if (e.shiftKey && (e.key === '>' || e.key === '.' || e.code === 'Period')) {
             e.preventDefault()
             const newSize = Math.min(fontSize + 2, 64) // Max 64px
             onFontSizeChange(id, newSize)
-          } else if (e.shiftKey && e.key === '<') {
+          } else if (e.shiftKey && (e.key === '<' || e.key === ',' || e.code === 'Comma')) {
+            e.preventDefault()
+            const newSize = Math.max(fontSize - 2, 10) // Min 10px
+            onFontSizeChange(id, newSize)
+          }
+          // Alternative: Cmd/Ctrl + Plus/Minus (without Shift)
+          else if (!e.shiftKey && (e.key === '+' || e.key === '=' || e.code === 'Equal')) {
+            e.preventDefault()
+            const newSize = Math.min(fontSize + 2, 64) // Max 64px
+            onFontSizeChange(id, newSize)
+          } else if (!e.shiftKey && (e.key === '-' || e.code === 'Minus')) {
             e.preventDefault()
             const newSize = Math.max(fontSize - 2, 10) // Min 10px
             onFontSizeChange(id, newSize)
