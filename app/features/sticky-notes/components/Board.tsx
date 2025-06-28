@@ -136,7 +136,7 @@ function BoardContent() {
     setDeletingIds(new Set(ids))
     
     // Delete after animation
-    const animationDuration = type === 'peel' ? 600 : 500
+    const animationDuration = type === 'peel' ? 700 : 500 // Increased for peel-corner animation
     setTimeout(() => {
       if (ids.length === 1) {
         deleteSticky(ids[0])

@@ -58,6 +58,7 @@ export default function StickyNote({
   const [isEditing, setIsEditing] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
+  const [peelAnimationType, setPeelAnimationType] = useState<'peel-off' | 'peel-corner'>('peel-off')
   const noteRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -173,8 +174,12 @@ export default function StickyNote({
   useEffect(() => {
     if (isDeleting) {
       setIsCrumpling(true)
+      // Randomly select peel animation type
+      if (deletionType === 'peel') {
+        setPeelAnimationType(Math.random() > 0.5 ? 'peel-off' : 'peel-corner')
+      }
     }
-  }, [isDeleting])
+  }, [isDeleting, deletionType])
 
   // Handle font size and formatting keyboard shortcuts (Word-style)
   useEffect(() => {
@@ -314,7 +319,7 @@ export default function StickyNote({
       } ${
         isDragging ? 'opacity-50' : ''
       } ${isSelected ? 'z-10' : ''} ${
-        isCrumpling ? (deletionType === 'peel' ? 'animate-peel-off' : 'animate-crumple') : ''
+        isCrumpling ? (deletionType === 'peel' ? `animate-${peelAnimationType}` : 'animate-crumple') : ''
       }`}
       style={{
         left: `${x}px`,
