@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import Link from 'next/link'
 import { useStickyStore } from '../store/useStickyStore'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
@@ -406,6 +407,17 @@ export default function Board() {
       )}
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
+      
+      {/* List view button */}
+      <Link
+        href="/list"
+        className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 px-4 py-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow flex items-center gap-2 z-50"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+        <span className="text-sm font-medium">リスト表示</span>
+      </Link>
       
       <TrashZone 
         onDrop={(id) => {

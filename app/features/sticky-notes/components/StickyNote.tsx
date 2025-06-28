@@ -174,33 +174,49 @@ export default function StickyNote({
         
         // Determine resize direction based on corner
         let delta = 0
+        let newX = resizeStart.initialX
+        let newY = resizeStart.initialY
+        
+        const initialSize = 192 * resizeStart.size
+        
         switch (resizeStart.corner) {
-          case 'tl': // Top-left: negative deltas increase size
+          case 'tl': // Top-left: fix bottom-right
             delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX + deltaY < 0 ? 1 : -1)
             break
-          case 'tr': // Top-right: positive X, negative Y
+          case 'tr': // Top-right: fix bottom-left
             delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX - deltaY > 0 ? 1 : -1)
             break
-          case 'bl': // Bottom-left: negative X, positive Y
+          case 'bl': // Bottom-left: fix top-right
             delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (-deltaX + deltaY > 0 ? 1 : -1)
             break
-          case 'br': // Bottom-right: positive deltas increase size
+          case 'br': // Bottom-right: fix top-left
             delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX + deltaY > 0 ? 1 : -1)
             break
         }
         
         // Calculate new size
         const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / 200))
+        const newSizePx = 192 * newSize
+        const sizeDiff = newSizePx - initialSize
         
-        // Calculate position adjustment to keep center fixed
-        const initialWidth = 192 * resizeStart.size
-        const newWidth = 192 * newSize
-        const widthDiff = newWidth - initialWidth
-        
-        // Adjust position from initial position to maintain center
-        const positionAdjustment = widthDiff / 2
-        const newX = resizeStart.initialX - positionAdjustment
-        const newY = resizeStart.initialY - positionAdjustment
+        // Adjust position based on which corner is being dragged
+        switch (resizeStart.corner) {
+          case 'tl': // Moving top-left, bottom-right stays fixed
+            newX = resizeStart.initialX - sizeDiff
+            newY = resizeStart.initialY - sizeDiff
+            break
+          case 'tr': // Moving top-right, bottom-left stays fixed
+            newX = resizeStart.initialX
+            newY = resizeStart.initialY - sizeDiff
+            break
+          case 'bl': // Moving bottom-left, top-right stays fixed
+            newX = resizeStart.initialX - sizeDiff
+            newY = resizeStart.initialY
+            break
+          case 'br': // Moving bottom-right, top-left stays fixed
+            // Position stays the same
+            break
+        }
         
         onSizeChange(id, newSize)
         onPositionChange(id, newX, newY)
