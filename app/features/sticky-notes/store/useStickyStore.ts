@@ -23,9 +23,9 @@ export const useStickyStore = create<StickyStore>()(
         }]
       })),
       
-      updateStickyText: (id, text) => set((state) => ({
+      updateStickyText: (id, text, richText) => set((state) => ({
         stickies: state.stickies.map(sticky =>
-          sticky.id === id ? { ...sticky, text } : sticky
+          sticky.id === id ? { ...sticky, text, richText } : sticky
         )
       })),
       

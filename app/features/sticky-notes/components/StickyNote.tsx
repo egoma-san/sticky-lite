@@ -4,12 +4,14 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 import { StickyColor } from '../types'
 import { isModifierKeyPressed } from '../utils/platform'
+import RichTextEditor from './RichTextEditor'
 
 interface StickyNoteProps {
   id: string
   x: number
   y: number
   text: string
+  richText?: string
   color: StickyColor
   size?: number
   fontSize?: number
@@ -21,7 +23,7 @@ interface StickyNoteProps {
   isDeleting?: boolean
   deletionType?: 'crumple' | 'peel'
   onSelect: (e?: React.MouseEvent) => void
-  onTextChange: (id: string, text: string) => void
+  onTextChange: (id: string, text: string, richText?: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
   onSizeChange: (id: string, size: number) => void
   onFontSizeChange: (id: string, fontSize: number) => void
@@ -34,6 +36,7 @@ export default function StickyNote({
   x,
   y,
   text,
+  richText,
   color,
   size = 1,
   fontSize = 16,
@@ -60,7 +63,7 @@ export default function StickyNote({
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
   const [peelAnimationType, setPeelAnimationType] = useState<'peel-off' | 'peel-corner'>('peel-off')
   const noteRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
 
   const getGradientColors = () => {
     switch (color) {
@@ -208,21 +211,7 @@ export default function StickyNote({
             const newSize = Math.max(fontSize - 2, 10) // Min 10px
             onFontSizeChange(id, newSize)
           } 
-          // Bold (Ctrl/Cmd + B)
-          else if (e.key === 'b' || e.key === 'B') {
-            e.preventDefault()
-            onFormatChange(id, { isBold: !isBold })
-          }
-          // Italic (Ctrl/Cmd + I)
-          else if (e.key === 'i' || e.key === 'I') {
-            e.preventDefault()
-            onFormatChange(id, { isItalic: !isItalic })
-          }
-          // Underline (Ctrl/Cmd + U)
-          else if (e.key === 'u' || e.key === 'U') {
-            e.preventDefault()
-            onFormatChange(id, { isUnderline: !isUnderline })
-          }
+          // Text formatting shortcuts are now handled by RichTextEditor
         }
       }
       
@@ -400,39 +389,46 @@ export default function StickyNote({
           </svg>
         </div>
         
-        <textarea
-          ref={textareaRef}
-          className={`w-full h-full bg-transparent resize-none outline-none text-gray-800 p-3 pb-10 pr-10 ${
+        <div
+          className={`w-full h-full text-gray-800 overflow-auto ${
             !isEditing ? 'pointer-events-none' : ''
           }`}
-          style={{ 
-            fontSize: `${fontSize}px`, 
-            lineHeight: 1.5,
-            fontWeight: isBold ? 'bold' : 'normal',
-            fontStyle: isItalic ? 'italic' : 'normal',
-            textDecoration: isUnderline ? 'underline' : 'none'
-          }}
-          value={text}
-          onChange={(e) => onTextChange(id, e.target.value)}
-          placeholder="メモを入力..."
           onClick={(e) => {
             e.stopPropagation()
+            if (!isEditing) {
+              setIsEditing(true)
+            }
           }}
           onDoubleClick={(e) => {
             e.stopPropagation()
             setIsEditing(true)
           }}
-          onBlur={() => setIsEditing(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault()
-              setIsEditing(false)
-              // Keep focus on the note but exit edit mode
-              noteRef.current?.focus()
-            }
-          }}
-          readOnly={!isEditing}
-        />
+        >
+          {isEditing ? (
+            <RichTextEditor
+              value={text}
+              richText={richText}
+              onChange={(newText, newRichText) => onTextChange(id, newText, newRichText)}
+              onBlur={() => setIsEditing(false)}
+              fontSize={fontSize}
+              autoFocus={true}
+              className="p-3 pb-10 pr-10"
+            />
+          ) : (
+            <div
+              className="p-3 pb-10 pr-10 w-full h-full"
+              style={{
+                fontSize: `${fontSize}px`,
+                lineHeight: 1.5,
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+              dangerouslySetInnerHTML={{ 
+                __html: richText || text.replace(/\n/g, '<br>') || '<span style="color: #9ca3af;">メモを入力...</span>' 
+              }}
+            />
+          )}
+        </div>
       </div>
       
       {/* Resize handles */}

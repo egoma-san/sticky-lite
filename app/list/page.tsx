@@ -141,9 +141,18 @@ export default function ListPage() {
                       onDoubleClick={() => handleNavigateToSticky(sticky.id)}
                       title="ダブルクリックで付箋に移動"
                     >
-                      <p className="text-gray-800 whitespace-pre-wrap select-none">
-                        {sticky.text || '(空の付箋)'}
-                      </p>
+                      {sticky.richText ? (
+                        <div 
+                          className="text-gray-800 select-none"
+                          dangerouslySetInnerHTML={{ 
+                            __html: sticky.richText || '<span class="text-gray-400">(空の付箋)</span>' 
+                          }}
+                        />
+                      ) : (
+                        <p className="text-gray-800 whitespace-pre-wrap select-none">
+                          {sticky.text || '(空の付箋)'}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getColorClass(sticky.color)}`}>

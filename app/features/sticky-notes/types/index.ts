@@ -5,12 +5,13 @@ export interface Sticky {
   x: number
   y: number
   text: string
+  richText?: string // HTML content for rich text
   color: StickyColor
   size?: number // Size multiplier, default is 1
   fontSize?: number // Font size in pixels, default is 16
-  isBold?: boolean
-  isItalic?: boolean
-  isUnderline?: boolean
+  isBold?: boolean // Deprecated - kept for backward compatibility
+  isItalic?: boolean // Deprecated - kept for backward compatibility
+  isUnderline?: boolean // Deprecated - kept for backward compatibility
   createdAt: Date
 }
 
@@ -19,7 +20,7 @@ export interface StickyStore {
   selectedColor: StickyColor
   setSelectedColor: (color: StickyColor) => void
   addSticky: (x: number, y: number, color?: StickyColor) => void
-  updateStickyText: (id: string, text: string) => void
+  updateStickyText: (id: string, text: string, richText?: string) => void
   updateStickyPosition: (id: string, x: number, y: number) => void
   updateStickySize: (id: string, size: number) => void
   updateStickyFontSize: (id: string, fontSize: number) => void

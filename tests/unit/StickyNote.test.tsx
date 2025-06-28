@@ -289,14 +289,20 @@ describe('StickyNote', () => {
     const note = screen.getByTestId('sticky-note')
     fireEvent.doubleClick(note)
     
-    const textarea = screen.getByPlaceholderText('メモを入力...')
-    expect(textarea).not.toHaveAttribute('readonly')
+    // Check if contentEditable div exists (rich text editor)
+    const editor = note.querySelector('[contenteditable="true"]')
+    expect(editor).toBeInTheDocument()
     
-    // Click outside
+    // Click outside and blur the editor
     const outside = screen.getByTestId('outside')
     fireEvent.mouseDown(outside)
+    if (editor) {
+      fireEvent.blur(editor)
+    }
     
-    expect(textarea).toHaveAttribute('readonly')
+    // Editor should not be present after clicking outside
+    const editorAfter = note.querySelector('[contenteditable="true"]')
+    expect(editorAfter).not.toBeInTheDocument()
   })
 
   it('should exit edit mode when selection is lost', () => {
@@ -305,12 +311,15 @@ describe('StickyNote', () => {
     const note = screen.getByTestId('sticky-note')
     fireEvent.doubleClick(note)
     
-    const textarea = screen.getByPlaceholderText('メモを入力...')
-    expect(textarea).not.toHaveAttribute('readonly')
+    // Check if contentEditable div exists (rich text editor)
+    const editor = note.querySelector('[contenteditable="true"]')
+    expect(editor).toBeInTheDocument()
     
     // Lose selection
     rerender(<StickyNote {...defaultProps} isSelected={false} />)
     
-    expect(textarea).toHaveAttribute('readonly')
+    // Editor should not be present when not in edit mode
+    const editorAfter = note.querySelector('[contenteditable="true"]')
+    expect(editorAfter).not.toBeInTheDocument()
   })
 })

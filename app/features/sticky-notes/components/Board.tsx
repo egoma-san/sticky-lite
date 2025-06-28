@@ -433,6 +433,7 @@ function BoardContent() {
             x={sticky.x}
             y={sticky.y}
             text={sticky.text}
+            richText={sticky.richText}
             color={sticky.color || 'yellow'}
             size={sticky.size || 1}
             fontSize={sticky.fontSize || 16}
