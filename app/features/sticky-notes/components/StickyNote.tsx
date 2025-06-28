@@ -40,7 +40,7 @@ export default function StickyNote({
   const [isCrumpling, setIsCrumpling] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
-  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br' } | null>(null)
+  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
   const noteRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -163,7 +163,7 @@ export default function StickyNote({
     e.stopPropagation()
     e.preventDefault()
     setIsResizing(true)
-    setResizeStart({ x: e.clientX, y: e.clientY, size, corner })
+    setResizeStart({ x: e.clientX, y: e.clientY, size, corner, initialX: x, initialY: y })
   }
 
   useEffect(() => {
@@ -191,17 +191,16 @@ export default function StickyNote({
         
         // Calculate new size
         const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / 200))
-        const sizeDiff = newSize - resizeStart.size
         
         // Calculate position adjustment to keep center fixed
-        const currentWidth = 192 * resizeStart.size
+        const initialWidth = 192 * resizeStart.size
         const newWidth = 192 * newSize
-        const widthDiff = newWidth - currentWidth
+        const widthDiff = newWidth - initialWidth
         
-        // Adjust position to maintain center
+        // Adjust position from initial position to maintain center
         const positionAdjustment = widthDiff / 2
-        const newX = x - positionAdjustment
-        const newY = y - positionAdjustment
+        const newX = resizeStart.initialX - positionAdjustment
+        const newY = resizeStart.initialY - positionAdjustment
         
         onSizeChange(id, newSize)
         onPositionChange(id, newX, newY)
