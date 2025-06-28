@@ -19,6 +19,7 @@ interface StickyNoteProps {
   isSelected: boolean
   hasMultipleSelection?: boolean
   isDeleting?: boolean
+  deletionType?: 'crumple' | 'peel'
   onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
@@ -42,6 +43,7 @@ export default function StickyNote({
   isSelected,
   hasMultipleSelection = false,
   isDeleting = false,
+  deletionType = 'crumple',
   onSelect,
   onTextChange,
   onPositionChange,
@@ -124,15 +126,8 @@ export default function StickyNote({
   }
 
   const handleDelete = useCallback(() => {
-    // Play crumple sound
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYmLjo+UmJmbnp+ipqirrrCztLW5vr7Awc')
-    audio.volume = 0.3
-    audio.play().catch(() => {}) // Ignore errors if audio fails
-    
-    setIsCrumpling(true)
-    setTimeout(() => {
-      onDelete(id)
-    }, 300)
+    // This is handled by Board component now
+    onDelete(id)
   }, [id, onDelete])
 
   useEffect(() => {
@@ -319,15 +314,15 @@ export default function StickyNote({
       } ${
         isDragging ? 'opacity-50' : ''
       } ${isSelected ? 'z-10' : ''} ${
-        isCrumpling ? 'animate-crumple' : ''
+        isCrumpling ? (deletionType === 'peel' ? 'animate-peel-off' : 'animate-crumple') : ''
       }`}
       style={{
         left: `${x}px`,
         top: `${y}px`,
         width: `${192 * size}px`,
         height: `${192 * size}px`,
-        transform: isCrumpling ? 'scale(0) rotate(360deg)' : 'scale(1) rotate(0deg)',
-        transition: isCrumpling ? 'transform 0.3s ease-in' : isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out',
+        transform: 'scale(1) rotate(0deg)',
+        transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out',
       }}
       draggable
       onDragStart={handleDragStart}
@@ -336,13 +331,21 @@ export default function StickyNote({
       onDoubleClick={handleDoubleClick}
     >
       {/* Main sticky note body */}
-      <div className={`relative w-full h-full shadow-md overflow-hidden ${
+      <div className={`relative w-full h-full overflow-hidden ${
         color === 'yellow' ? 'bg-yellow-300' : 
         color === 'blue' ? 'bg-blue-300' : 
         color === 'pink' ? 'bg-pink-300' : 'bg-yellow-300'
       } ${
         isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-      } ${!isDragging ? 'hover:shadow-lg' : 'shadow-xl'}`}>
+      }`}
+      style={{
+        boxShadow: isDragging 
+          ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
+          : isCrumpling
+          ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          : '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+        transition: 'box-shadow 0.3s ease-in-out',
+      }}>
         {/* Folded corner - bottom right with curved design */}
         <div className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none">
           <svg

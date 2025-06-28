@@ -32,15 +32,7 @@ export default function TrashZone({ onDrop, onDeleteSelected }: TrashZoneProps) 
     setIsDragOver(false)
     const stickyId = e.dataTransfer.getData('stickyId')
     if (stickyId) {
-      // Play crumple sound
-      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYmLjo+UmJmbnp+ipqirrrCztLW5vr7Awc')
-      audio.volume = 0.3
-      audio.play().catch(() => {})
-      
-      // Small delay to allow animation in StickyNote
-      setTimeout(() => {
-        onDrop(stickyId)
-      }, 100)
+      onDrop(stickyId)
     }
   }
 

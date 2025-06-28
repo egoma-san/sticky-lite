@@ -10,6 +10,7 @@ import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
 import InfoButton from './InfoButton'
 import { isModifierKeyPressed } from '../utils/platform'
+import { playPaperSound } from '../utils/deletionSounds'
 
 function BoardContent() {
   const searchParams = useSearchParams()
@@ -30,6 +31,7 @@ function BoardContent() {
   const [isMovingSelection, setIsMovingSelection] = useState(false)
   const [moveStart, setMoveStart] = useState<{ x: number; y: number; positions: Map<string, { x: number; y: number }> } | null>(null)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+  const [deletionType, setDeletionType] = useState<'crumple' | 'peel'>('crumple')
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -122,17 +124,19 @@ function BoardContent() {
     }
   }, [focusId, stickies, scale])
 
-  // Play crumple sound and animate before deleting
-  const handleDeleteWithAnimation = useCallback((ids: string[]) => {
-    // Play crumple sound
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYmLjo+UmJmbnp+ipqirrrCztLW5vr7Awc')
-    audio.volume = 0.3
-    audio.play().catch(() => {})
+  // Play sound and animate before deleting
+  const handleDeleteWithAnimation = useCallback((ids: string[], type: 'crumple' | 'peel' = 'crumple') => {
+    // Set deletion type for animation
+    setDeletionType(type)
+    
+    // Play appropriate sound
+    playPaperSound(type)
     
     // Add to deleting set
     setDeletingIds(new Set(ids))
     
     // Delete after animation
+    const animationDuration = type === 'peel' ? 600 : 500
     setTimeout(() => {
       if (ids.length === 1) {
         deleteSticky(ids[0])
@@ -140,7 +144,8 @@ function BoardContent() {
         deleteMultiple(ids)
       }
       setDeletingIds(new Set())
-    }, 300)
+      setDeletionType('crumple') // Reset to default
+    }, animationDuration)
   }, [deleteSticky, deleteMultiple])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -437,6 +442,7 @@ function BoardContent() {
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             isDeleting={deletingIds.has(sticky.id)}
+            deletionType={deletionType}
             onSelect={(e?: React.MouseEvent) => {
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
@@ -457,7 +463,7 @@ function BoardContent() {
             onSizeChange={updateStickySize}
             onFontSizeChange={updateStickyFontSize}
             onFormatChange={updateStickyFormat}
-            onDelete={deleteSticky}
+            onDelete={(id) => handleDeleteWithAnimation([id], 'crumple')}
           />
         ))}
       </div>
@@ -496,7 +502,8 @@ function BoardContent() {
       
       <TrashZone 
         onDrop={(id) => {
-          handleDeleteWithAnimation([id])
+          // Use peel animation for drag-to-trash
+        handleDeleteWithAnimation([id], 'peel')
           // Remove from selection if it was selected
           const newSelection = new Set(selectedStickyIds)
           newSelection.delete(id)
@@ -505,7 +512,8 @@ function BoardContent() {
         onDeleteSelected={() => {
           if (selectedStickyIds.size > 0) {
             const idsToDelete = Array.from(selectedStickyIds)
-            handleDeleteWithAnimation(idsToDelete)
+            // Use crumple for bulk delete
+            handleDeleteWithAnimation(idsToDelete, 'crumple')
             setSelectedStickyIds(new Set())
           }
         }}
