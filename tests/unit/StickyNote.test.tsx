@@ -6,6 +6,9 @@ describe('StickyNote', () => {
   const mockOnPositionChange = jest.fn()
   const mockOnDelete = jest.fn()
   const mockOnSelect = jest.fn()
+  const mockOnSizeChange = jest.fn()
+  const mockOnFontSizeChange = jest.fn()
+  const mockOnFormatChange = jest.fn()
 
   // Mock Audio API for tests
   beforeAll(() => {
@@ -16,7 +19,7 @@ describe('StickyNote', () => {
   })
 
   const defaultProps = {
-    id: 'test-id',
+    id: '1',
     x: 100,
     y: 200,
     text: 'Test note',
@@ -25,6 +28,9 @@ describe('StickyNote', () => {
     onSelect: mockOnSelect,
     onTextChange: mockOnTextChange,
     onPositionChange: mockOnPositionChange,
+    onSizeChange: mockOnSizeChange,
+    onFontSizeChange: mockOnFontSizeChange,
+    onFormatChange: mockOnFormatChange,
     onDelete: mockOnDelete,
   }
 
@@ -53,7 +59,7 @@ describe('StickyNote', () => {
     
     fireEvent.change(textarea, { target: { value: 'Updated note' } })
     
-    expect(mockOnTextChange).toHaveBeenCalledWith('test-id', 'Updated note')
+    expect(mockOnTextChange).toHaveBeenCalledWith('1', 'Updated note')
   })
 
   it('should be draggable', () => {
@@ -92,6 +98,266 @@ describe('StickyNote', () => {
     // Wait for the crumple animation
     await new Promise(resolve => setTimeout(resolve, 350))
     
-    expect(mockOnDelete).toHaveBeenCalledWith('test-id')
+    expect(mockOnDelete).toHaveBeenCalledWith('1')
+  })
+
+  it('should enter edit mode on double click', () => {
+    render(<StickyNote {...defaultProps} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    fireEvent.doubleClick(note)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).not.toHaveAttribute('readonly')
+  })
+
+  it('should exit edit mode on ESC key', () => {
+    render(<StickyNote {...defaultProps} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    fireEvent.doubleClick(note)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    fireEvent.keyDown(textarea, { key: 'Escape', preventDefault: jest.fn() })
+    
+    expect(textarea).toHaveAttribute('readonly')
+  })
+
+  it('should show resize handles when selected', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    expect(screen.getByTestId('resize-handle-tl')).toBeInTheDocument()
+    expect(screen.getByTestId('resize-handle-tr')).toBeInTheDocument()
+    expect(screen.getByTestId('resize-handle-bl')).toBeInTheDocument()
+    expect(screen.getByTestId('resize-handle-br')).toBeInTheDocument()
+  })
+
+  it('should not show resize handles when not selected', () => {
+    render(<StickyNote {...defaultProps} isSelected={false} />)
+    
+    expect(screen.queryByTestId('resize-handle-tl')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-tr')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-bl')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-br')).not.toBeInTheDocument()
+  })
+
+  it('should not show resize handles when part of multiple selection', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} hasMultipleSelection={true} />)
+    
+    expect(screen.queryByTestId('resize-handle-tl')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-tr')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-bl')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('resize-handle-br')).not.toBeInTheDocument()
+  })
+
+  it('should handle resize with mouse drag', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    const resizeHandle = screen.getByTestId('resize-handle-br')
+    
+    // Start resize
+    fireEvent.mouseDown(resizeHandle, { clientX: 0, clientY: 0 })
+    
+    // Drag
+    fireEvent.mouseMove(document, { clientX: 100, clientY: 100 })
+    
+    // Release
+    fireEvent.mouseUp(document)
+    
+    expect(mockOnSizeChange).toHaveBeenCalled()
+    expect(mockOnPositionChange).toHaveBeenCalled()
+  })
+
+  it('should render with custom size', () => {
+    render(<StickyNote {...defaultProps} size={2} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    expect(note).toHaveStyle({ width: '384px', height: '384px' })
+  })
+
+  it('should render with custom font size', () => {
+    render(<StickyNote {...defaultProps} fontSize={24} />)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).toHaveStyle({ fontSize: '24px' })
+  })
+
+  it('should render with bold text', () => {
+    render(<StickyNote {...defaultProps} isBold={true} />)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).toHaveStyle({ fontWeight: 'bold' })
+  })
+
+  it('should render with italic text', () => {
+    render(<StickyNote {...defaultProps} isItalic={true} />)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).toHaveStyle({ fontStyle: 'italic' })
+  })
+
+  it('should render with underline text', () => {
+    render(<StickyNote {...defaultProps} isUnderline={true} />)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).toHaveStyle({ textDecoration: 'underline' })
+  })
+
+  it('should handle font size increase shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    fireEvent.keyDown(window, { key: '>', shiftKey: true, ctrlKey: true })
+    
+    expect(mockOnFontSizeChange).toHaveBeenCalledWith('1', 18)
+  })
+
+  it('should handle font size decrease shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} fontSize={20} />)
+    
+    fireEvent.keyDown(window, { key: '<', shiftKey: true, ctrlKey: true })
+    
+    expect(mockOnFontSizeChange).toHaveBeenCalledWith('1', 18)
+  })
+
+  it('should handle bold toggle shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
+    
+    expect(mockOnFormatChange).toHaveBeenCalledWith('1', { isBold: true })
+  })
+
+  it('should handle italic toggle shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    fireEvent.keyDown(window, { key: 'i', ctrlKey: true })
+    
+    expect(mockOnFormatChange).toHaveBeenCalledWith('1', { isItalic: true })
+  })
+
+  it('should handle underline toggle shortcut', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    fireEvent.keyDown(window, { key: 'u', ctrlKey: true })
+    
+    expect(mockOnFormatChange).toHaveBeenCalledWith('1', { isUnderline: true })
+  })
+
+  it('should render different colors correctly', () => {
+    const { rerender } = render(<StickyNote {...defaultProps} color="yellow" />)
+    let note = screen.getByTestId('sticky-note').querySelector('.bg-yellow-300')
+    expect(note).toBeInTheDocument()
+    
+    rerender(<StickyNote {...defaultProps} color="blue" />)
+    note = screen.getByTestId('sticky-note').querySelector('.bg-blue-300')
+    expect(note).toBeInTheDocument()
+    
+    rerender(<StickyNote {...defaultProps} color="pink" />)
+    note = screen.getByTestId('sticky-note').querySelector('.bg-pink-300')
+    expect(note).toBeInTheDocument()
+  })
+
+  it('should show crumple animation when deleting', () => {
+    render(<StickyNote {...defaultProps} isDeleting={true} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    expect(note).toHaveClass('animate-crumple')
+    expect(note).toHaveStyle({ transform: 'scale(0) rotate(360deg)' })
+  })
+
+  it('should not allow drag when shift is held', () => {
+    render(<StickyNote {...defaultProps} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    const preventDefault = jest.fn()
+    
+    fireEvent.dragStart(note, {
+      shiftKey: true,
+      preventDefault,
+      dataTransfer: {
+        setData: jest.fn(),
+        effectAllowed: 'move'
+      }
+    })
+    
+    expect(preventDefault).toHaveBeenCalled()
+  })
+
+  it('should not allow drag when part of multiple selection', () => {
+    render(<StickyNote {...defaultProps} isSelected={true} hasMultipleSelection={true} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    const preventDefault = jest.fn()
+    
+    fireEvent.dragStart(note, {
+      preventDefault,
+      dataTransfer: {
+        setData: jest.fn(),
+        effectAllowed: 'move'
+      }
+    })
+    
+    expect(preventDefault).toHaveBeenCalled()
+  })
+
+  it('should handle drag start correctly', () => {
+    render(<StickyNote {...defaultProps} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    const setData = jest.fn()
+    
+    fireEvent.dragStart(note, {
+      dataTransfer: {
+        setData,
+        effectAllowed: 'move'
+      }
+    })
+    
+    expect(setData).toHaveBeenCalledWith('stickyId', '1')
+  })
+
+  it('should select note on click', () => {
+    render(<StickyNote {...defaultProps} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    fireEvent.click(note)
+    
+    expect(mockOnSelect).toHaveBeenCalled()
+  })
+
+  it('should exit edit mode when clicking outside', () => {
+    render(
+      <div>
+        <StickyNote {...defaultProps} />
+        <div data-testid="outside">Outside</div>
+      </div>
+    )
+    
+    const note = screen.getByTestId('sticky-note')
+    fireEvent.doubleClick(note)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).not.toHaveAttribute('readonly')
+    
+    // Click outside
+    const outside = screen.getByTestId('outside')
+    fireEvent.mouseDown(outside)
+    
+    expect(textarea).toHaveAttribute('readonly')
+  })
+
+  it('should exit edit mode when selection is lost', () => {
+    const { rerender } = render(<StickyNote {...defaultProps} isSelected={true} />)
+    
+    const note = screen.getByTestId('sticky-note')
+    fireEvent.doubleClick(note)
+    
+    const textarea = screen.getByPlaceholderText('メモを入力...')
+    expect(textarea).not.toHaveAttribute('readonly')
+    
+    // Lose selection
+    rerender(<StickyNote {...defaultProps} isSelected={false} />)
+    
+    expect(textarea).toHaveAttribute('readonly')
   })
 })

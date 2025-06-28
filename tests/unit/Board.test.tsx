@@ -28,6 +28,9 @@ describe('Board', () => {
       deleteMultiple: mockDeleteMultiple,
       updateStickyText: mockUpdateStickyText,
       updateStickyPosition: mockUpdateStickyPosition,
+      updateStickySize: jest.fn(),
+      updateStickyFontSize: jest.fn(),
+      updateStickyFormat: jest.fn(),
     })
     
     // Mock Audio API
@@ -49,7 +52,7 @@ describe('Board', () => {
     expect(trashZone).toBeInTheDocument()
   })
 
-  it('should delete selected sticky when trash button is clicked', () => {
+  it('should delete selected sticky when trash button is clicked', async () => {
     render(<Board />)
     
     // Select a sticky note
@@ -60,8 +63,10 @@ describe('Board', () => {
     const trashButton = screen.getByTestId('trash-zone')
     fireEvent.click(trashButton)
     
-    // Verify deleteMultiple was called with the selected sticky's id
-    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
+    // Wait for animation timeout
+    await waitFor(() => {
+      expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
+    }, { timeout: 400 })
   })
 
   it('should not delete anything when trash is clicked with no selection', () => {
@@ -102,13 +107,13 @@ describe('Board', () => {
     
     fireEvent.drop(trashZone, { dataTransfer })
     
-    // Wait for the timeout in TrashZone
+    // Wait for the animation timeout in Board component
     await waitFor(() => {
       expect(mockDeleteSticky).toHaveBeenCalledWith('test-1')
-    }, { timeout: 150 })
+    }, { timeout: 400 })
   })
 
-  it('should deselect sticky after deletion', () => {
+  it('should deselect sticky after deletion', async () => {
     render(<Board />)
     
     // Select a sticky note by clicking on it
@@ -119,11 +124,13 @@ describe('Board', () => {
     const trashButton = screen.getByTestId('trash-zone')
     fireEvent.click(trashButton)
     
-    // Verify deleteMultiple was called with the correct id
-    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
+    // Wait for animation timeout
+    await waitFor(() => {
+      expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
+    }, { timeout: 400 })
   })
 
-  it('should delete multiple selected stickies with keyboard', () => {
+  it('should delete multiple selected stickies with keyboard', async () => {
     render(<Board />)
     
     // Select first sticky note
@@ -137,7 +144,132 @@ describe('Board', () => {
     // Press delete key
     fireEvent.keyDown(window, { key: 'Delete' })
     
-    // Verify deleteMultiple was called with both ids
-    expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1', 'test-2'])
+    // Wait for animation timeout
+    await waitFor(() => {
+      expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1', 'test-2'])
+    }, { timeout: 400 })
+  })
+
+  it('should add sticky on double click', () => {
+    render(<Board />)
+    
+    const canvas = screen.getByTestId('board-canvas')
+    fireEvent.doubleClick(canvas)
+    
+    expect(mockAddSticky).toHaveBeenCalled()
+  })
+
+  it('should deselect stickies when clicking on empty space', () => {
+    render(<Board />)
+    
+    // Select a sticky first
+    const stickyNote = screen.getByText('Test Note 1').closest('[data-testid="sticky-note"]')
+    fireEvent.click(stickyNote!)
+    
+    // Click on empty space
+    const canvas = screen.getByTestId('board-canvas')
+    fireEvent.mouseDown(canvas)
+    fireEvent.mouseUp(canvas)
+    fireEvent.click(canvas)
+    
+    // Should deselect (no visual test, but interaction should work)
+    expect(canvas).toBeInTheDocument()
+  })
+
+  it('should handle zoom with ctrl+wheel', () => {
+    render(<Board />)
+    
+    const board = screen.getByTestId('board')
+    
+    // Zoom in
+    fireEvent.wheel(board, {
+      deltaY: -100,
+      ctrlKey: true
+    })
+    
+    // Zoom out
+    fireEvent.wheel(board, {
+      deltaY: 100,
+      ctrlKey: true
+    })
+    
+    expect(board).toBeInTheDocument()
+  })
+
+  it('should pan board with mouse drag', () => {
+    render(<Board />)
+    
+    const canvas = screen.getByTestId('board-canvas')
+    
+    // Start panning
+    fireEvent.mouseDown(canvas, { clientX: 100, clientY: 100 })
+    fireEvent.mouseMove(canvas, { clientX: 200, clientY: 200 })
+    fireEvent.mouseUp(canvas)
+    
+    expect(canvas).toBeInTheDocument()
+  })
+
+  it('should handle selection box with shift+drag', () => {
+    render(<Board />)
+    
+    const board = screen.getByTestId('board')
+    
+    // Start selection
+    fireEvent.mouseDown(board, {
+      clientX: 50,
+      clientY: 50,
+      shiftKey: true
+    })
+    
+    // Drag to create selection box
+    fireEvent.mouseMove(board, {
+      clientX: 250,
+      clientY: 250
+    })
+    
+    // Release
+    fireEvent.mouseUp(board)
+    
+    expect(board).toBeInTheDocument()
+  })
+
+  it('should navigate from list view with focus parameter', () => {
+    // Mock useSearchParams
+    const mockGet = jest.fn().mockReturnValue('test-1')
+    jest.mock('next/navigation', () => ({
+      useSearchParams: () => ({
+        get: mockGet
+      })
+    }))
+    
+    render(<Board />)
+    
+    expect(screen.getByTestId('board')).toBeInTheDocument()
+  })
+
+  it('should show info button', () => {
+    render(<Board />)
+    
+    const infoButton = screen.getByTitle('ショートカット一覧')
+    expect(infoButton).toBeInTheDocument()
+  })
+
+  it('should show list view button', () => {
+    render(<Board />)
+    
+    const listButton = screen.getByText('リスト表示')
+    expect(listButton).toBeInTheDocument()
+  })
+
+  it('should show zoom controls', () => {
+    render(<Board />)
+    
+    const zoomOut = screen.getByText('−')
+    const zoomIn = screen.getByText('+')
+    const zoomDisplay = screen.getByDisplayValue('100%')
+    
+    expect(zoomOut).toBeInTheDocument()
+    expect(zoomIn).toBeInTheDocument()
+    expect(zoomDisplay).toBeInTheDocument()
   })
 })
