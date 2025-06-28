@@ -12,7 +12,7 @@ import ZoomControls from './ZoomControls'
 function BoardContent() {
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, deleteSticky, deleteMultiple } = useStickyStore()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, deleteSticky, deleteMultiple } = useStickyStore()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -428,6 +428,7 @@ function BoardContent() {
             text={sticky.text}
             color={sticky.color || 'yellow'}
             size={sticky.size || 1}
+            fontSize={sticky.fontSize || 16}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             isDeleting={deletingIds.has(sticky.id)}
@@ -449,6 +450,7 @@ function BoardContent() {
             onTextChange={updateStickyText}
             onPositionChange={updateStickyPosition}
             onSizeChange={updateStickySize}
+            onFontSizeChange={updateStickyFontSize}
             onDelete={deleteSticky}
           />
         ))}

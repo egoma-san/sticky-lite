@@ -11,6 +11,7 @@ interface StickyNoteProps {
   text: string
   color: StickyColor
   size?: number
+  fontSize?: number
   isSelected: boolean
   hasMultipleSelection?: boolean
   isDeleting?: boolean
@@ -18,6 +19,7 @@ interface StickyNoteProps {
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
   onSizeChange: (id: string, size: number) => void
+  onFontSizeChange: (id: string, fontSize: number) => void
   onDelete: (id: string) => void
 }
 
@@ -28,6 +30,7 @@ export default function StickyNote({
   text,
   color,
   size = 1,
+  fontSize = 16,
   isSelected,
   hasMultipleSelection = false,
   isDeleting = false,
@@ -35,6 +38,7 @@ export default function StickyNote({
   onTextChange,
   onPositionChange,
   onSizeChange,
+  onFontSizeChange,
   onDelete,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -167,6 +171,32 @@ export default function StickyNote({
       setIsCrumpling(true)
     }
   }, [isDeleting])
+
+  // Handle font size keyboard shortcuts
+  useEffect(() => {
+    if (isSelected && (isEditing || !hasMultipleSelection)) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Check if Cmd/Ctrl is pressed
+        if (e.metaKey || e.ctrlKey) {
+          if (e.key === '+' || e.key === '=') {
+            e.preventDefault()
+            const newSize = Math.min(fontSize + 2, 32) // Max 32px
+            onFontSizeChange(id, newSize)
+          } else if (e.key === '-' || e.key === '_') {
+            e.preventDefault()
+            const newSize = Math.max(fontSize - 2, 10) // Min 10px
+            onFontSizeChange(id, newSize)
+          } else if (e.key === '0') {
+            e.preventDefault()
+            onFontSizeChange(id, 16) // Reset to default
+          }
+        }
+      }
+      
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isSelected, isEditing, hasMultipleSelection, fontSize, id, onFontSizeChange])
 
   const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
     e.stopPropagation()
@@ -334,6 +364,7 @@ export default function StickyNote({
           className={`w-full h-full bg-transparent resize-none outline-none text-gray-800 p-3 pb-10 pr-10 ${
             !isEditing ? 'pointer-events-none' : ''
           }`}
+          style={{ fontSize: `${fontSize}px`, lineHeight: 1.5 }}
           value={text}
           onChange={(e) => onTextChange(id, e.target.value)}
           placeholder="メモを入力..."

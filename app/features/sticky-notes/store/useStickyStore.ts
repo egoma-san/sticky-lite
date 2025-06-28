@@ -41,6 +41,12 @@ export const useStickyStore = create<StickyStore>()(
         )
       })),
       
+      updateStickyFontSize: (id, fontSize) => set((state) => ({
+        stickies: state.stickies.map(sticky =>
+          sticky.id === id ? { ...sticky, fontSize } : sticky
+        )
+      })),
+      
       deleteSticky: (id) => set((state) => ({
         stickies: state.stickies.filter(sticky => sticky.id !== id)
       })),
@@ -62,7 +68,8 @@ export const useStickyStore = create<StickyStore>()(
             stickies: persistedState.stickies?.map((sticky: any) => ({
               ...sticky,
               color: sticky.color || 'yellow',
-              size: sticky.size || 1
+              size: sticky.size || 1,
+              fontSize: sticky.fontSize || 16
             })) || [],
             selectedColor: persistedState.selectedColor || 'yellow'
           }
