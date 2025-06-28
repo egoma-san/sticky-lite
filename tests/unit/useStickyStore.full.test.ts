@@ -1,6 +1,9 @@
 import { act, renderHook } from '@testing-library/react'
 import { useStickyStore } from '../../app/features/sticky-notes/store/useStickyStore'
 
+// Reset store state before each test
+const initialState = useStickyStore.getState()
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
@@ -24,6 +27,13 @@ Object.defineProperty(window, 'localStorage', {
 
 describe('useStickyStore - Extended Tests', () => {
   beforeEach(() => {
+    localStorageMock.clear()
+    jest.clearAllMocks()
+    // Reset store to initial state
+    useStickyStore.setState(initialState)
+  })
+
+  afterEach(() => {
     localStorageMock.clear()
   })
 
