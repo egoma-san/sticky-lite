@@ -8,7 +8,7 @@ import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
 
 export default function Board() {
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, deleteSticky, deleteMultiple } = useStickyStore()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, deleteSticky, deleteMultiple } = useStickyStore()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -230,10 +230,11 @@ export default function Board() {
       // Check which stickies are in the selection box
       const selectedIds = new Set<string>()
       stickies.forEach(sticky => {
+        const stickySize = sticky.size || 1
         const stickyScreenX = sticky.x * scale + position.x
         const stickyScreenY = sticky.y * scale + position.y
-        const stickyWidth = 192 * scale // 48 * 4 (w-48 in tailwind is 12rem = 192px)
-        const stickyHeight = 192 * scale
+        const stickyWidth = 192 * stickySize * scale // 48 * 4 (w-48 in tailwind is 12rem = 192px)
+        const stickyHeight = 192 * stickySize * scale
         
         // Check if sticky intersects with selection box
         if (stickyScreenX + stickyWidth >= x &&
@@ -280,8 +281,12 @@ export default function Board() {
     const stickyId = e.dataTransfer.getData('stickyId')
     if (stickyId && boardRef.current) {
       const rect = boardRef.current.getBoundingClientRect()
-      const x = (e.clientX - rect.left - position.x) / scale - 96 // Half of sticky width
-      const y = (e.clientY - rect.top - position.y) / scale - 96 // Half of sticky height
+      const sticky = stickies.find(s => s.id === stickyId)
+      const stickySize = sticky?.size || 1
+      const halfWidth = (192 * stickySize) / 2
+      const halfHeight = (192 * stickySize) / 2
+      const x = (e.clientX - rect.left - position.x) / scale - halfWidth
+      const y = (e.clientY - rect.top - position.y) / scale - halfHeight
       updateStickyPosition(stickyId, x, y)
     }
   }
@@ -361,6 +366,7 @@ export default function Board() {
             y={sticky.y}
             text={sticky.text}
             color={sticky.color || 'yellow'}
+            size={sticky.size || 1}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             onSelect={(e?: React.MouseEvent) => {
@@ -380,6 +386,7 @@ export default function Board() {
             }}
             onTextChange={updateStickyText}
             onPositionChange={updateStickyPosition}
+            onSizeChange={updateStickySize}
             onDelete={deleteSticky}
           />
         ))}

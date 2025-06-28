@@ -35,6 +35,12 @@ export const useStickyStore = create<StickyStore>()(
         )
       })),
       
+      updateStickySize: (id, size) => set((state) => ({
+        stickies: state.stickies.map(sticky =>
+          sticky.id === id ? { ...sticky, size } : sticky
+        )
+      })),
+      
       deleteSticky: (id) => set((state) => ({
         stickies: state.stickies.filter(sticky => sticky.id !== id)
       })),
@@ -50,12 +56,13 @@ export const useStickyStore = create<StickyStore>()(
       version: 1,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
-          // Migrate old stickies without color property
+          // Migrate old stickies without color and size properties
           return {
             ...persistedState,
             stickies: persistedState.stickies?.map((sticky: any) => ({
               ...sticky,
-              color: sticky.color || 'yellow'
+              color: sticky.color || 'yellow',
+              size: sticky.size || 1
             })) || [],
             selectedColor: persistedState.selectedColor || 'yellow'
           }

@@ -10,11 +10,13 @@ interface StickyNoteProps {
   y: number
   text: string
   color: StickyColor
+  size?: number
   isSelected: boolean
   hasMultipleSelection?: boolean
   onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
+  onSizeChange: (id: string, size: number) => void
   onDelete: (id: string) => void
 }
 
@@ -24,17 +26,21 @@ export default function StickyNote({
   y,
   text,
   color,
+  size = 1,
   isSelected,
   hasMultipleSelection = false,
   onSelect,
   onTextChange,
   onPositionChange,
+  onSizeChange,
   onDelete,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isCrumpling, setIsCrumpling] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number } | null>(null)
   const noteRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -65,8 +71,8 @@ export default function StickyNote({
   const gradientColors = getGradientColors()
 
   const handleDragStart = (e: React.DragEvent) => {
-    // Prevent dragging when shift is held or when part of multiple selection
-    if (e.shiftKey || (isSelected && hasMultipleSelection)) {
+    // Prevent dragging when shift is held, when part of multiple selection, or when resizing
+    if (e.shiftKey || (isSelected && hasMultipleSelection) || isResizing) {
       e.preventDefault()
       return
     }
@@ -153,13 +159,49 @@ export default function StickyNote({
     }
   }, [isSelected])
 
+  const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
+    e.stopPropagation()
+    e.preventDefault()
+    setIsResizing(true)
+    setResizeStart({ x: e.clientX, y: e.clientY, size })
+  }
+
+  useEffect(() => {
+    if (isResizing && resizeStart) {
+      const handleMouseMove = (e: MouseEvent) => {
+        const deltaX = e.clientX - resizeStart.x
+        const deltaY = e.clientY - resizeStart.y
+        
+        // Use the larger delta to maintain aspect ratio
+        const delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX + deltaY > 0 ? 1 : -1)
+        
+        // Calculate new size
+        const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / 200))
+        onSizeChange(id, newSize)
+      }
+
+      const handleMouseUp = () => {
+        setIsResizing(false)
+        setResizeStart(null)
+      }
+
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isResizing, resizeStart, id, onSizeChange])
+
   return (
     <div
       ref={noteRef}
       id={id}
       data-testid="sticky-note"
-      className={`absolute w-48 h-48 transition-all duration-300 ${
-        isEditing ? 'cursor-text' : 'cursor-move'
+      className={`absolute transition-all duration-300 ${
+        isEditing ? 'cursor-text' : isResizing ? 'cursor-nwse-resize' : 'cursor-move'
       } ${
         isDragging ? 'opacity-50' : ''
       } ${isSelected ? 'z-10' : ''} ${
@@ -168,8 +210,10 @@ export default function StickyNote({
       style={{
         left: `${x}px`,
         top: `${y}px`,
+        width: `${192 * size}px`,
+        height: `${192 * size}px`,
         transform: isCrumpling ? 'scale(0) rotate(360deg)' : 'scale(1) rotate(0deg)',
-        transition: isCrumpling ? 'transform 0.3s ease-in' : '',
+        transition: isCrumpling ? 'transform 0.3s ease-in' : isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out',
       }}
       draggable
       onDragStart={handleDragStart}
@@ -253,6 +297,36 @@ export default function StickyNote({
           readOnly={!isEditing}
         />
       </div>
+      
+      {/* Resize handles */}
+      {isSelected && !hasMultipleSelection && (
+        <>
+          {/* Top-left */}
+          <div
+            className="absolute -top-2 -left-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nwse-resize hover:scale-110 transition-transform"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'tl')}
+            data-testid="resize-handle-tl"
+          />
+          {/* Top-right */}
+          <div
+            className="absolute -top-2 -right-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nesw-resize hover:scale-110 transition-transform"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'tr')}
+            data-testid="resize-handle-tr"
+          />
+          {/* Bottom-left */}
+          <div
+            className="absolute -bottom-2 -left-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nesw-resize hover:scale-110 transition-transform"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'bl')}
+            data-testid="resize-handle-bl"
+          />
+          {/* Bottom-right */}
+          <div
+            className="absolute -bottom-2 -right-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nwse-resize hover:scale-110 transition-transform"
+            onMouseDown={(e) => handleResizeMouseDown(e, 'br')}
+            data-testid="resize-handle-br"
+          />
+        </>
+      )}
     </div>
   )
 }
