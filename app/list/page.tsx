@@ -2,11 +2,13 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useStickyStore } from '../features/sticky-notes'
 
 export default function ListPage() {
   const { stickies, deleteSticky, deleteMultiple } = useStickyStore()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
+  const router = useRouter()
 
   const handleCheck = (id: string) => {
     const newChecked = new Set(checkedItems)
@@ -53,6 +55,10 @@ export default function ListPage() {
       default:
         return 'bg-yellow-100 text-yellow-900'
     }
+  }
+
+  const handleNavigateToSticky = (id: string) => {
+    router.push(`/?focus=${id}`)
   }
 
   return (
@@ -130,8 +136,12 @@ export default function ListPage() {
                         className="w-4 h-4 rounded border-gray-300"
                       />
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="text-gray-800 whitespace-pre-wrap">
+                    <td 
+                      className="px-4 py-3 cursor-pointer"
+                      onDoubleClick={() => handleNavigateToSticky(sticky.id)}
+                      title="ダブルクリックで付箋に移動"
+                    >
+                      <p className="text-gray-800 whitespace-pre-wrap select-none">
                         {sticky.text || '(空の付箋)'}
                       </p>
                     </td>

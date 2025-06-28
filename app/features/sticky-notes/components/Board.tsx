@@ -1,14 +1,17 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useStickyStore } from '../store/useStickyStore'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
 
-export default function Board() {
+function BoardContent() {
+  const searchParams = useSearchParams()
+  const focusId = searchParams?.get('focus') || null
   const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, deleteSticky, deleteMultiple } = useStickyStore()
   
   // Initialize with default values to avoid hydration mismatch
@@ -80,6 +83,41 @@ export default function Board() {
       setPosition({ x: centerX, y: centerY })
     }
   }, [initialOffset])
+
+  // Focus on specific sticky note when navigating from list view
+  useEffect(() => {
+    if (focusId && boardRef.current) {
+      const targetSticky = stickies.find(s => s.id === focusId)
+      if (targetSticky) {
+        const rect = boardRef.current.getBoundingClientRect()
+        const stickySize = targetSticky.size || 1
+        const stickyWidth = 192 * stickySize
+        const stickyHeight = 192 * stickySize
+        
+        // Calculate position to center the sticky note in the viewport
+        const centerX = rect.width / 2
+        const centerY = rect.height / 2
+        
+        // Calculate new position
+        const newPosition = {
+          x: centerX - (targetSticky.x + stickyWidth / 2) * scale,
+          y: centerY - (targetSticky.y + stickyHeight / 2) * scale
+        }
+        
+        // Constrain position
+        const constrainedPos = constrainPosition(newPosition, scale)
+        setPosition(constrainedPos)
+        
+        // Select the sticky note
+        setSelectedStickyIds(new Set([focusId]))
+        
+        // Clear the focus parameter from URL
+        const url = new URL(window.location.href)
+        url.searchParams.delete('focus')
+        window.history.replaceState({}, '', url.toString())
+      }
+    }
+  }, [focusId, stickies, scale])
 
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only deselect when clicking on empty background (not when dragging)
@@ -467,5 +505,13 @@ export default function Board() {
         }}
       />
     </div>
+  )
+}
+
+export default function Board() {
+  return (
+    <Suspense fallback={null}>
+      <BoardContent />
+    </Suspense>
   )
 }

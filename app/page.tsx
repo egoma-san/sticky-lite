@@ -1,7 +1,6 @@
-import { Board } from './features/sticky-notes'
+'use client'
 
-// Force dynamic rendering to avoid prerendering issues
-export const dynamic = 'force-dynamic'
+import { Board } from './features/sticky-notes'
 
 export default function Home() {
   return <Board />
