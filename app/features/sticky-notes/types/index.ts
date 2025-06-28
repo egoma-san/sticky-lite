@@ -8,6 +8,9 @@ export interface Sticky {
   color: StickyColor
   size?: number // Size multiplier, default is 1
   fontSize?: number // Font size in pixels, default is 16
+  isBold?: boolean
+  isItalic?: boolean
+  isUnderline?: boolean
   createdAt: Date
 }
 
@@ -20,6 +23,7 @@ export interface StickyStore {
   updateStickyPosition: (id: string, x: number, y: number) => void
   updateStickySize: (id: string, size: number) => void
   updateStickyFontSize: (id: string, fontSize: number) => void
+  updateStickyFormat: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
   deleteSticky: (id: string) => void
   deleteMultiple: (ids: string[]) => void
   clearAll: () => void

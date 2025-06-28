@@ -8,11 +8,12 @@ import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
+import InfoButton from './InfoButton'
 
 function BoardContent() {
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, deleteSticky, deleteMultiple } = useStickyStore()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickyStore()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -429,6 +430,9 @@ function BoardContent() {
             color={sticky.color || 'yellow'}
             size={sticky.size || 1}
             fontSize={sticky.fontSize || 16}
+            isBold={sticky.isBold}
+            isItalic={sticky.isItalic}
+            isUnderline={sticky.isUnderline}
             isSelected={selectedStickyIds.has(sticky.id)}
             hasMultipleSelection={selectedStickyIds.size > 1}
             isDeleting={deletingIds.has(sticky.id)}
@@ -451,6 +455,7 @@ function BoardContent() {
             onPositionChange={updateStickyPosition}
             onSizeChange={updateStickySize}
             onFontSizeChange={updateStickyFontSize}
+            onFormatChange={updateStickyFormat}
             onDelete={deleteSticky}
           />
         ))}
@@ -470,6 +475,9 @@ function BoardContent() {
       )}
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
+      
+      {/* Info button */}
+      <InfoButton />
       
       {/* List view button */}
       <Link

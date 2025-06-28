@@ -12,6 +12,9 @@ interface StickyNoteProps {
   color: StickyColor
   size?: number
   fontSize?: number
+  isBold?: boolean
+  isItalic?: boolean
+  isUnderline?: boolean
   isSelected: boolean
   hasMultipleSelection?: boolean
   isDeleting?: boolean
@@ -20,6 +23,7 @@ interface StickyNoteProps {
   onPositionChange: (id: string, x: number, y: number) => void
   onSizeChange: (id: string, size: number) => void
   onFontSizeChange: (id: string, fontSize: number) => void
+  onFormatChange: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
   onDelete: (id: string) => void
 }
 
@@ -31,6 +35,9 @@ export default function StickyNote({
   color,
   size = 1,
   fontSize = 16,
+  isBold = false,
+  isItalic = false,
+  isUnderline = false,
   isSelected,
   hasMultipleSelection = false,
   isDeleting = false,
@@ -39,6 +46,7 @@ export default function StickyNote({
   onPositionChange,
   onSizeChange,
   onFontSizeChange,
+  onFormatChange,
   onDelete,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
@@ -172,23 +180,36 @@ export default function StickyNote({
     }
   }, [isDeleting])
 
-  // Handle font size keyboard shortcuts
+  // Handle font size and formatting keyboard shortcuts (Word-style)
   useEffect(() => {
     if (isSelected && (isEditing || !hasMultipleSelection)) {
       const handleKeyDown = (e: KeyboardEvent) => {
         // Check if Cmd/Ctrl is pressed
         if (e.metaKey || e.ctrlKey) {
-          if (e.key === '+' || e.key === '=') {
+          // Font size shortcuts (Word-style)
+          if (e.shiftKey && e.key === '>') {
             e.preventDefault()
-            const newSize = Math.min(fontSize + 2, 32) // Max 32px
+            const newSize = Math.min(fontSize + 2, 64) // Max 64px
             onFontSizeChange(id, newSize)
-          } else if (e.key === '-' || e.key === '_') {
+          } else if (e.shiftKey && e.key === '<') {
             e.preventDefault()
             const newSize = Math.max(fontSize - 2, 10) // Min 10px
             onFontSizeChange(id, newSize)
-          } else if (e.key === '0') {
+          } 
+          // Bold (Ctrl/Cmd + B)
+          else if (e.key === 'b' || e.key === 'B') {
             e.preventDefault()
-            onFontSizeChange(id, 16) // Reset to default
+            onFormatChange(id, { isBold: !isBold })
+          }
+          // Italic (Ctrl/Cmd + I)
+          else if (e.key === 'i' || e.key === 'I') {
+            e.preventDefault()
+            onFormatChange(id, { isItalic: !isItalic })
+          }
+          // Underline (Ctrl/Cmd + U)
+          else if (e.key === 'u' || e.key === 'U') {
+            e.preventDefault()
+            onFormatChange(id, { isUnderline: !isUnderline })
           }
         }
       }
@@ -196,7 +217,7 @@ export default function StickyNote({
       window.addEventListener('keydown', handleKeyDown)
       return () => window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isSelected, isEditing, hasMultipleSelection, fontSize, id, onFontSizeChange])
+  }, [isSelected, isEditing, hasMultipleSelection, fontSize, isBold, isItalic, isUnderline, id, onFontSizeChange, onFormatChange])
 
   const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
     e.stopPropagation()
@@ -364,7 +385,13 @@ export default function StickyNote({
           className={`w-full h-full bg-transparent resize-none outline-none text-gray-800 p-3 pb-10 pr-10 ${
             !isEditing ? 'pointer-events-none' : ''
           }`}
-          style={{ fontSize: `${fontSize}px`, lineHeight: 1.5 }}
+          style={{ 
+            fontSize: `${fontSize}px`, 
+            lineHeight: 1.5,
+            fontWeight: isBold ? 'bold' : 'normal',
+            fontStyle: isItalic ? 'italic' : 'normal',
+            textDecoration: isUnderline ? 'underline' : 'none'
+          }}
           value={text}
           onChange={(e) => onTextChange(id, e.target.value)}
           placeholder="メモを入力..."

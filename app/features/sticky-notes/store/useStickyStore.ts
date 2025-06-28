@@ -47,6 +47,12 @@ export const useStickyStore = create<StickyStore>()(
         )
       })),
       
+      updateStickyFormat: (id, format) => set((state) => ({
+        stickies: state.stickies.map(sticky =>
+          sticky.id === id ? { ...sticky, ...format } : sticky
+        )
+      })),
+      
       deleteSticky: (id) => set((state) => ({
         stickies: state.stickies.filter(sticky => sticky.id !== id)
       })),
