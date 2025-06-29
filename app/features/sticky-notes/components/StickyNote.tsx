@@ -30,6 +30,8 @@ interface StickyNoteProps {
   onFontSizeChange: (id: string, fontSize: number) => void
   onFormatChange: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
   onDelete: (id: string) => void
+  zIndex?: number
+  onDragStart?: () => void
 }
 
 export default function StickyNote({
@@ -56,6 +58,8 @@ export default function StickyNote({
   onFontSizeChange,
   onFormatChange,
   onDelete,
+  zIndex = 0,
+  onDragStart,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -127,6 +131,11 @@ export default function StickyNote({
     if (e.shiftKey || (isSelected && hasMultipleSelection) || isResizing) {
       e.preventDefault()
       return
+    }
+    
+    // Bring to front when dragging starts
+    if (onDragStart) {
+      onDragStart()
     }
     
     setIsDragging(true)
@@ -359,6 +368,7 @@ export default function StickyNote({
           height: `${192 * (isResizing ? localSize : size)}px`,
           transform: 'scale(1) rotate(0deg)',
           transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out, left 0.2s ease-out, top 0.2s ease-out',
+          zIndex: zIndex,
         }}
         draggable
         onDragStart={handleDragStart}

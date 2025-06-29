@@ -41,9 +41,18 @@ function BoardContent() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [deletionType, setDeletionType] = useState<'crumple' | 'peel' | 'origami'>('origami')
   const [editingSticky, setEditingSticky] = useState<string | null>(null)
+  const [stickyZIndices, setStickyZIndices] = useState<Map<string, number>>(new Map())
+  const [highestZIndex, setHighestZIndex] = useState(0)
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
+  
+  // Bring sticky to front by assigning highest z-index
+  const bringToFront = useCallback((stickyId: string) => {
+    const newZIndex = highestZIndex + 1
+    setStickyZIndices(prev => new Map(prev).set(stickyId, newZIndex))
+    setHighestZIndex(newZIndex)
+  }, [highestZIndex])
   
   // Calculate minimum scale to prevent showing outside canvas
   const getMinScale = () => {
@@ -245,6 +254,9 @@ function BoardContent() {
       if (selectedStickyIds.has(stickyId) && selectedStickyIds.size > 0) {
         e.preventDefault()
         setIsMovingSelection(true)
+        
+        // Bring all selected stickies to front
+        selectedStickyIds.forEach(id => bringToFront(id))
         
         // Store initial positions of all selected stickies
         const positions = new Map<string, { x: number; y: number }>()
@@ -470,7 +482,11 @@ function BoardContent() {
             hasMultipleSelection={selectedStickyIds.size > 1}
             isDeleting={deletingIds.has(sticky.id)}
             deletionType={deletionType}
+            zIndex={stickyZIndices.get(sticky.id) || 0}
             onSelect={(e?: React.MouseEvent) => {
+              // Bring to front when selected
+              bringToFront(sticky.id)
+              
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
                 setSelectedStickyIds(new Set([sticky.id]))
@@ -492,6 +508,7 @@ function BoardContent() {
             onFontSizeChange={updateStickyFontSize}
             onFormatChange={updateStickyFormat}
             onDelete={(id) => handleDeleteWithAnimation([id], 'origami')}
+            onDragStart={() => bringToFront(sticky.id)}
           />
             </React.Fragment>
           )
