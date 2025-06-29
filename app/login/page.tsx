@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -150,6 +151,22 @@ export default function LoginPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Skip login option */}
+        <div className="text-center">
+          <Link 
+            href="/"
+            className="inline-flex items-center gap-2 text-sm sm:text-base text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            ログインせずに使う
+          </Link>
+          <p className="text-xs text-gray-500 mt-2">
+            （データはブラウザに保存されます）
+          </p>
         </div>
 
         {/* Decorative rounded squares - hidden on small screens */}

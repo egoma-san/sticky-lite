@@ -13,10 +13,11 @@ import { isModifierKeyPressed } from '../utils/platform'
 import { playPaperSound } from '../utils/deletionSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
+import { isSupabaseEnabled } from '@/app/lib/features'
 
 function BoardContent() {
   const router = useRouter()
-  const logout = useAuthStore((state) => state.logout)
+  const { logout, isAuthenticated, user } = useAuthStore()
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
   const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
@@ -505,19 +506,38 @@ function BoardContent() {
           <span className="text-sm font-medium">リスト表示</span>
         </Link>
         
-        {/* Logout button */}
-        <button
-          onClick={() => {
-            logout()
-            router.push('/login')
-          }}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-600 transition-all flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span className="text-sm font-medium hidden sm:inline">ログアウト</span>
-        </button>
+        {/* Login/Logout button */}
+        {isSupabaseEnabled() && (
+          isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 hidden sm:inline">
+                {user?.email}
+              </span>
+              <button
+                onClick={() => {
+                  logout()
+                  // Don't redirect, just stay on the board
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-600 transition-all flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="text-sm font-medium hidden sm:inline">ログアウト</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="text-sm font-medium hidden sm:inline">ログイン</span>
+            </Link>
+          )
+        )}
       </div>
       
       <TrashZone 

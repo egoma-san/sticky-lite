@@ -5,12 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStickies } from '../features/sticky-notes/hooks/useStickies'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
+import { isSupabaseEnabled } from '@/app/lib/features'
 
 export default function ListPage() {
   const { stickies, deleteSticky, deleteMultiple } = useStickies()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
   const router = useRouter()
-  const logout = useAuthStore((state) => state.logout)
+  const { logout, isAuthenticated, user } = useAuthStore()
 
   const handleCheck = (id: string) => {
     const newChecked = new Set(checkedItems)
@@ -83,15 +84,31 @@ export default function ListPage() {
             >
               ボードに戻る
             </Link>
-            <button
-              onClick={() => {
-                logout()
-                router.push('/login')
-              }}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-            >
-              ログアウト
-            </button>
+            {isSupabaseEnabled() && (
+              isAuthenticated ? (
+                <>
+                  <span className="text-sm text-gray-600 hidden sm:inline">
+                    {user?.email}
+                  </span>
+                  <button
+                    onClick={() => {
+                      logout()
+                      // Don't redirect, just stay on the page
+                    }}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    ログアウト
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  ログイン
+                </Link>
+              )
+            )}
           </div>
         </div>
 

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import AuthGuard from './features/auth/components/AuthGuard'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,9 +25,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={inter.className}>
-        <AuthGuard>
-          {children}
-        </AuthGuard>
+        {children}
       </body>
     </html>
   )
