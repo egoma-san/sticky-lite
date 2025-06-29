@@ -58,6 +58,10 @@ pnpm dev
 
 Visit http://localhost:3000 to start using Sticky-Lite!
 
+### Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on deploying to Vercel with Supabase integration.
+
 ### Running Tests
 
 ```bash

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '../store/useAuthStore'
+import { isSupabaseEnabled } from '@/app/lib/features'
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -14,11 +15,18 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore()
 
   useEffect(() => {
-    // 初回マウント時に認証状態をチェック
-    checkAuth()
+    // Supabaseが有効な場合のみ認証チェック
+    if (isSupabaseEnabled()) {
+      checkAuth()
+    }
   }, [checkAuth])
 
   useEffect(() => {
+    // Supabaseが無効な場合は認証不要
+    if (!isSupabaseEnabled()) {
+      return
+    }
+
     // ログインページは認証不要
     if (pathname === '/login') {
       return
@@ -29,6 +37,11 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       router.push('/login')
     }
   }, [isAuthenticated, isLoading, pathname, router])
+
+  // Supabaseが無効な場合は常に子要素を表示
+  if (!isSupabaseEnabled()) {
+    return <>{children}</>
+  }
 
   // ローディング中はスピナーを表示
   if (isLoading) {

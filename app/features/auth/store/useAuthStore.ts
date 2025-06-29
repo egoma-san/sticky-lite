@@ -23,6 +23,11 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     error: null,
     login: async (email: string, password: string) => {
+      if (!supabase) {
+        set({ error: 'Authentication service not available', isLoading: false })
+        return false
+      }
+      
       set({ isLoading: true, error: null })
       try {
         const { data, error } = await supabase.auth.signInWithPassword({

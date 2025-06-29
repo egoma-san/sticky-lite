@@ -51,6 +51,11 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
   setSelectedColor: (color) => set({ selectedColor: color }),
 
   fetchStickies: async (boardId: string) => {
+    if (!supabase) {
+      set({ stickies: [], isLoading: false })
+      return
+    }
+    
     set({ isLoading: true, error: null })
     try {
       const { data, error } = await supabase
