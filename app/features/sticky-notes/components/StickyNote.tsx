@@ -79,6 +79,24 @@ export default function StickyNote({
           medium: '#fbcfe8',
           dark: '#f9a8d4'
         }
+      case 'green':
+        return {
+          light: '#d1fae5',
+          medium: '#a7f3d0',
+          dark: '#86efac'
+        }
+      case 'purple':
+        return {
+          light: '#f3e8ff',
+          medium: '#e9d5ff',
+          dark: '#d8b4fe'
+        }
+      case 'orange':
+        return {
+          light: '#fed7aa',
+          medium: '#fec989',
+          dark: '#fdba74'
+        }
       case 'yellow':
       default:
         return {
@@ -324,7 +342,10 @@ export default function StickyNote({
       <div className={`relative w-full h-full overflow-hidden ${
         color === 'yellow' ? 'bg-yellow-300' : 
         color === 'blue' ? 'bg-blue-300' : 
-        color === 'pink' ? 'bg-pink-300' : 'bg-yellow-300'
+        color === 'pink' ? 'bg-pink-300' :
+        color === 'green' ? 'bg-green-300' :
+        color === 'purple' ? 'bg-purple-300' :
+        color === 'orange' ? 'bg-orange-300' : 'bg-yellow-300'
       } ${
         isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
       }`}
