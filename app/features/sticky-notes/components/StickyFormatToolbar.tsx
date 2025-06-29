@@ -34,6 +34,7 @@ export default function StickyFormatToolbar({
   width,
   height
 }: StickyFormatToolbarProps) {
+  console.log('StickyFormatToolbar rendering at:', { x, y, position })
   const colors: StickyColor[] = ['yellow', 'blue', 'pink', 'green', 'purple', 'orange']
   const fontSizes = [12, 14, 16, 18, 20, 24, 28, 32]
   

@@ -15,6 +15,7 @@ import { playPaperSound } from '../utils/deletionSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
 import { isSupabaseEnabled } from '@/app/lib/features'
+import { StickyColor } from '../types'
 
 function BoardContent() {
   const router = useRouter()
@@ -95,6 +96,15 @@ function BoardContent() {
       setPosition({ x: centerX, y: centerY })
     }
   }, [initialOffset])
+
+  // Debug selectedStickyIds changes
+  useEffect(() => {
+    console.log('selectedStickyIds changed:', { 
+      size: selectedStickyIds.size, 
+      ids: Array.from(selectedStickyIds),
+      timestamp: new Date().toISOString()
+    })
+  }, [selectedStickyIds])
 
   // Focus on specific sticky note when navigating from list view
   useEffect(() => {
