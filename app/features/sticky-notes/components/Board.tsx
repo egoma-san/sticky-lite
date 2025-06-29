@@ -417,6 +417,50 @@ function BoardContent() {
         e.preventDefault()
       }
       
+      // Handle formatting shortcuts when sticky notes are selected
+      if (selectedStickyIds.size > 0 && isModifierKeyPressed(e)) {
+        // Don't format if the user is typing in a textarea or input or contenteditable
+        const activeElement = document.activeElement
+        if (activeElement && (
+          activeElement.tagName === 'TEXTAREA' || 
+          activeElement.tagName === 'INPUT' ||
+          activeElement.getAttribute('contenteditable') === 'true'
+        )) {
+          return
+        }
+        
+        const selectedIds = Array.from(selectedStickyIds)
+        
+        switch (e.key.toLowerCase()) {
+          case 'b':
+            e.preventDefault()
+            // Toggle bold for all selected stickies
+            const allBold = stickies
+              .filter(s => selectedIds.includes(s.id))
+              .every(s => s.isBold)
+            selectedIds.forEach(id => updateStickyFormat(id, { isBold: !allBold }))
+            break
+            
+          case 'i':
+            e.preventDefault()
+            // Toggle italic for all selected stickies
+            const allItalic = stickies
+              .filter(s => selectedIds.includes(s.id))
+              .every(s => s.isItalic)
+            selectedIds.forEach(id => updateStickyFormat(id, { isItalic: !allItalic }))
+            break
+            
+          case 'u':
+            e.preventDefault()
+            // Toggle underline for all selected stickies
+            const allUnderline = stickies
+              .filter(s => selectedIds.includes(s.id))
+              .every(s => s.isUnderline)
+            selectedIds.forEach(id => updateStickyFormat(id, { isUnderline: !allUnderline }))
+            break
+        }
+      }
+      
       // Handle delete/backspace for multiple selected notes
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0) {
         // Don't delete if the user is typing in a textarea or input
@@ -435,7 +479,7 @@ function BoardContent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedStickyIds, handleDeleteWithAnimation])
+  }, [selectedStickyIds, handleDeleteWithAnimation, stickies, updateStickyFormat])
 
   return (
     <div 

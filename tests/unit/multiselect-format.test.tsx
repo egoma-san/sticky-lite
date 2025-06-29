@@ -269,6 +269,51 @@ describe('Multiple Selection and Format', () => {
     expect(sticky).not.toHaveClass('ring-4')
   })
 
+  test('keyboard shortcuts toggle formatting for selected stickies', () => {
+    render(<Board />)
+    
+    // Select multiple stickies
+    const firstSticky = screen.getAllByTestId('sticky-note')[0]
+    const secondSticky = screen.getAllByTestId('sticky-note')[1]
+    
+    fireEvent.click(firstSticky)
+    fireEvent.click(secondSticky, { shiftKey: true })
+    
+    // Press Cmd/Ctrl + B
+    fireEvent.keyDown(window, {
+      key: 'b',
+      ctrlKey: true // This works for both Mac and Windows in tests
+    })
+    
+    // Check if format was applied to both stickies
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('1', { isBold: true })
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('2', { isBold: true })
+    
+    // Clear mock calls
+    mockUpdateStickyFormat.mockClear()
+    
+    // Press Cmd/Ctrl + I
+    fireEvent.keyDown(window, {
+      key: 'i',
+      ctrlKey: true
+    })
+    
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('1', { isItalic: true })
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('2', { isItalic: true })
+    
+    // Clear mock calls
+    mockUpdateStickyFormat.mockClear()
+    
+    // Press Cmd/Ctrl + U
+    fireEvent.keyDown(window, {
+      key: 'u',
+      ctrlKey: true
+    })
+    
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('1', { isUnderline: true })
+    expect(mockUpdateStickyFormat).toHaveBeenCalledWith('2', { isUnderline: true })
+  })
+
   test('delete key triggers deletion for selected stickies', () => {
     const mockDeleteMultiple = jest.fn()
     const mockDeleteSticky = jest.fn()
