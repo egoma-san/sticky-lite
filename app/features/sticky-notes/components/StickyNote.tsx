@@ -327,6 +327,7 @@ export default function StickyNote({
         document.removeEventListener('mouseup', handleMouseUp)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isResizing, resizeStart, id, x, y, onSizeChange, onPositionChange])
 
   return (

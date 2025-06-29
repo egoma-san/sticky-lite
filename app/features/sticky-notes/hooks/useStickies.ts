@@ -62,10 +62,10 @@ export function useStickies() {
               if (newSticky && sticky.text) {
                 await supabaseStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
               }
-              if (newSticky && sticky.size !== 1) {
+              if (newSticky && sticky.size && sticky.size !== 1) {
                 await supabaseStore.updateStickySize(newSticky.id, sticky.size)
               }
-              if (newSticky && sticky.fontSize !== 16) {
+              if (newSticky && sticky.fontSize && sticky.fontSize !== 16) {
                 await supabaseStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
               }
               if (newSticky && (sticky.isBold || sticky.isItalic || sticky.isUnderline)) {
