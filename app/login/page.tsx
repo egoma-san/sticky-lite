@@ -1,0 +1,116 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    
+    // Simulate login process
+    setTimeout(() => {
+      setIsLoading(false)
+      router.push('/')
+    }, 1000)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo area with rounded squares */}
+        <div className="flex justify-center items-center gap-2">
+          <div className="w-12 h-12 bg-yellow-400 rounded-2xl animate-pulse" />
+          <div className="w-12 h-12 bg-blue-400 rounded-2xl animate-pulse delay-75" />
+          <div className="w-12 h-12 bg-pink-400 rounded-2xl animate-pulse delay-150" />
+        </div>
+
+        {/* Login form */}
+        <div className="bg-white rounded-3xl shadow-lg p-8 space-y-6">
+          <h2 className="text-2xl font-bold text-center text-gray-800">
+            ログイン
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                メールアドレス
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="メールアドレス"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="sr-only">
+                パスワード
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="パスワード"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-2xl bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  ログイン中...
+                </span>
+              ) : (
+                'ログイン'
+              )}
+            </button>
+          </form>
+
+          <div className="space-y-2">
+            <button className="w-full text-sm text-blue-600 hover:text-blue-800 transition-colors">
+              パスワードを忘れた方
+            </button>
+            <div className="text-center text-sm text-gray-600">
+              アカウントをお持ちでない方は
+              <button className="text-blue-600 hover:text-blue-800 ml-1 transition-colors">
+                新規登録
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative rounded squares */}
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <div className="w-8 h-8 bg-gray-200 rounded-xl" />
+          <div className="w-8 h-8 bg-gray-300 rounded-xl" />
+          <div className="w-8 h-8 bg-gray-200 rounded-xl" />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-4 text-gray-400 text-sm">
+        egoma.org
+      </div>
+    </div>
+  )
+}
