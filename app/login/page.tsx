@@ -31,29 +31,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+      <div className="w-full max-w-md space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Logo area with rounded squares */}
         <div className="flex justify-center items-center gap-2">
-          <div className="w-12 h-12 bg-yellow-400 rounded-2xl animate-pulse" />
-          <div className="w-12 h-12 bg-blue-400 rounded-2xl animate-pulse delay-75" />
-          <div className="w-12 h-12 bg-pink-400 rounded-2xl animate-pulse delay-150" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-2xl animate-pulse" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-400 rounded-2xl animate-pulse delay-75" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-400 rounded-2xl animate-pulse delay-150" />
         </div>
 
         {/* Login form */}
-        <div className="bg-white rounded-3xl shadow-lg p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-center text-gray-800">
+        <div className="bg-white rounded-3xl shadow-lg p-6 sm:p-8 space-y-4 sm:space-y-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
             ログイン
           </h2>
 
           {/* エラーメッセージ */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-2 sm:p-3 text-xs sm:text-sm text-red-700">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">
                 メールアドレス
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="メールアドレス"
-                className="w-full px-4 py-3 rounded-2xl border border-gray-300 text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl border border-gray-300 text-gray-800 bg-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="パスワード"
-                className="w-full px-4 py-3 pr-12 rounded-2xl border border-gray-300 text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-12 rounded-2xl border border-gray-300 text-gray-800 bg-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               <button
                 type="button"
@@ -103,7 +103,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 rounded-2xl bg-blue-500 text-white font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 sm:py-3 px-4 rounded-2xl bg-blue-500 text-white text-sm sm:text-base font-medium hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
@@ -120,10 +120,10 @@ export default function LoginPage() {
           </form>
 
           <div className="space-y-2">
-            <button className="w-full text-sm text-blue-600 hover:text-blue-800 transition-colors">
+            <button className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors">
               パスワードを忘れた方
             </button>
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-xs sm:text-sm text-gray-600">
               アカウントをお持ちでない方は
               <button className="text-blue-600 hover:text-blue-800 ml-1 transition-colors">
                 新規登録
@@ -132,8 +132,8 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Decorative rounded squares */}
-        <div className="flex justify-center items-center gap-4 mt-8">
+        {/* Decorative rounded squares - hidden on small screens */}
+        <div className="hidden sm:flex justify-center items-center gap-4">
           <div className="w-8 h-8 bg-gray-200 rounded-xl" />
           <div className="w-8 h-8 bg-gray-300 rounded-xl" />
           <div className="w-8 h-8 bg-gray-200 rounded-xl" />
@@ -141,7 +141,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-4 text-gray-400 text-sm">
+      <div className="absolute bottom-2 sm:bottom-4 text-gray-400 text-xs sm:text-sm">
         egoma.org
       </div>
     </div>
