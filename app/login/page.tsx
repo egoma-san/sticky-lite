@@ -31,8 +31,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
-      <div className="w-full max-w-md space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="min-h-screen h-screen bg-gray-50 flex flex-col items-center justify-start sm:justify-center px-4 pt-12 pb-8 sm:py-8 overflow-hidden">
+      <div className="w-full max-w-md space-y-3 sm:space-y-6 lg:space-y-8 mt-8 sm:mt-0">
         {/* Logo area with rounded squares */}
         <div className="flex justify-center items-center gap-2">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 rounded-2xl animate-pulse" />
@@ -41,7 +41,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login form */}
-        <div className="bg-white rounded-3xl shadow-lg p-6 sm:p-8 space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-3xl shadow-lg p-5 sm:p-8 space-y-3 sm:space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
             ログイン
           </h2>
