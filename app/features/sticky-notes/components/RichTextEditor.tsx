@@ -12,9 +12,7 @@ interface RichTextEditorProps {
   fontSize?: number
   autoFocus?: boolean
   className?: string
-  isBold?: boolean
-  isItalic?: boolean
-  isUnderline?: boolean
+  onEditorRef?: (ref: HTMLDivElement | null) => void
 }
 
 export default function RichTextEditor({
@@ -26,9 +24,7 @@ export default function RichTextEditor({
   fontSize = 16,
   autoFocus = false,
   className = '',
-  isBold = false,
-  isItalic = false,
-  isUnderline = false
+  onEditorRef
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isComposing, setIsComposing] = useState(false)
@@ -45,6 +41,14 @@ export default function RichTextEditor({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  
+  // Provide editor ref to parent
+  useEffect(() => {
+    onEditorRef?.(editorRef.current)
+    return () => {
+      onEditorRef?.(null)
+    }
+  }, [onEditorRef])
 
   // Auto focus
   useEffect(() => {
@@ -135,10 +139,7 @@ export default function RichTextEditor({
         minHeight: '100%',
         WebkitUserSelect: 'text',
         userSelect: 'text',
-        WebkitTouchCallout: 'none',
-        fontWeight: isBold ? 'bold' : 'normal',
-        fontStyle: isItalic ? 'italic' : 'normal',
-        textDecoration: isUnderline ? 'underline' : 'none'
+        WebkitTouchCallout: 'none'
       }}
       onInput={handleInput}
       onKeyDown={handleKeyDown}

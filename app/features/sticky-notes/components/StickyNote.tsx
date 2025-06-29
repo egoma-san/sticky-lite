@@ -32,6 +32,8 @@ interface StickyNoteProps {
   onDelete: (id: string) => void
   zIndex?: number
   onDragStart?: () => void
+  onEditingChange?: (isEditing: boolean) => void
+  onEditorRef?: (ref: HTMLDivElement | null) => void
 }
 
 export default function StickyNote({
@@ -60,6 +62,8 @@ export default function StickyNote({
   onDelete,
   zIndex = 0,
   onDragStart,
+  onEditingChange,
+  onEditorRef,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -166,6 +170,7 @@ export default function StickyNote({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsEditing(true)
+    onEditingChange?.(true)
   }
 
   const handleDelete = useCallback(() => {
@@ -198,19 +203,23 @@ export default function StickyNote({
       const handleClickOutside = (e: MouseEvent) => {
         if (noteRef.current && !noteRef.current.contains(e.target as Node)) {
           setIsEditing(false)
+          onEditingChange?.(false)
+          onEditorRef?.(null)
         }
       }
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [isEditing])
+  }, [isEditing, onEditingChange, onEditorRef])
   
   // Exit edit mode when selection is lost
   useEffect(() => {
     if (!isSelected) {
       setIsEditing(false)
+      onEditingChange?.(false)
+      onEditorRef?.(null)
     }
-  }, [isSelected])
+  }, [isSelected, onEditingChange, onEditorRef])
 
   // Apply crumpling animation when marked for deletion
   useEffect(() => {
@@ -457,11 +466,13 @@ export default function StickyNote({
             e.stopPropagation()
             if (!isEditing) {
               setIsEditing(true)
+              onEditingChange?.(true)
             }
           }}
           onDoubleClick={(e) => {
             e.stopPropagation()
             setIsEditing(true)
+            onEditingChange?.(true)
           }}
           onTouchStart={(e) => {
             // For iOS: handle touch to enter edit mode
@@ -482,6 +493,7 @@ export default function StickyNote({
                   
                   if (deltaX < 10 && deltaY < 10) {
                     setIsEditing(true)
+                    onEditingChange?.(true)
                   }
                 }
                 
@@ -497,13 +509,15 @@ export default function StickyNote({
               value={text}
               richText={richText}
               onChange={(newText, newRichText) => onTextChange(id, newText, newRichText)}
-              onBlur={() => setIsEditing(false)}
+              onBlur={() => {
+                setIsEditing(false)
+                onEditingChange?.(false)
+                onEditorRef?.(null)
+              }}
               fontSize={fontSize}
               autoFocus={true}
               className="p-3 pb-10 pr-10"
-              isBold={isBold}
-              isItalic={isItalic}
-              isUnderline={isUnderline}
+              onEditorRef={onEditorRef}
             />
           ) : (
             <div
@@ -515,10 +529,7 @@ export default function StickyNote({
                 overflowWrap: 'break-word',
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
-                WebkitTouchCallout: 'none',
-                fontWeight: isBold ? 'bold' : 'normal',
-                fontStyle: isItalic ? 'italic' : 'normal',
-                textDecoration: isUnderline ? 'underline' : 'none'
+                WebkitTouchCallout: 'none'
               }}
               dangerouslySetInnerHTML={{ 
                 __html: richText || text.replace(/\n/g, '<br>') || '<span style="color: #9ca3af;">メモを入力...</span>' 

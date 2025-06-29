@@ -9,6 +9,8 @@ interface StickyFormatToolbarProps {
   isBold?: boolean
   isItalic?: boolean
   isUnderline?: boolean
+  isEditing?: boolean
+  activeEditor?: HTMLDivElement | null
   onColorChange: (color: StickyColor) => void
   onFontSizeChange: (size: number) => void
   onFormatChange: (format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
@@ -29,6 +31,8 @@ export default function StickyFormatToolbar({
   isBold = false,
   isItalic = false,
   isUnderline = false,
+  isEditing = false,
+  activeEditor,
   onColorChange,
   onFontSizeChange,
   onFormatChange,

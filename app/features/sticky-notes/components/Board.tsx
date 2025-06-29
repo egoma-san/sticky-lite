@@ -42,6 +42,7 @@ function BoardContent() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [deletionType, setDeletionType] = useState<'crumple' | 'peel' | 'origami'>('origami')
   const [editingSticky, setEditingSticky] = useState<string | null>(null)
+  const [activeEditor, setActiveEditor] = useState<HTMLDivElement | null>(null)
   const [stickyZIndices, setStickyZIndices] = useState<Map<string, number>>(new Map())
   const [highestZIndex, setHighestZIndex] = useState(0)
   const boardRef = useRef<HTMLDivElement>(null)
@@ -417,8 +418,8 @@ function BoardContent() {
         e.preventDefault()
       }
       
-      // Handle formatting shortcuts when sticky notes are selected
-      if (selectedStickyIds.size > 0 && isModifierKeyPressed(e)) {
+      // Handle formatting shortcuts when sticky notes are selected (not in editing mode)
+      if (selectedStickyIds.size > 0 && isModifierKeyPressed(e) && !editingSticky) {
         // Don't format if the user is typing in a textarea or input or contenteditable
         const activeElement = document.activeElement
         if (activeElement && (
@@ -479,7 +480,7 @@ function BoardContent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedStickyIds, handleDeleteWithAnimation, stickies, updateStickyFormat])
+  }, [selectedStickyIds, handleDeleteWithAnimation, stickies, updateStickyFormat, editingSticky])
 
   return (
     <div 
@@ -556,6 +557,8 @@ function BoardContent() {
             onFormatChange={updateStickyFormat}
             onDelete={(id) => handleDeleteWithAnimation([id], 'origami')}
             onDragStart={() => bringToFront(sticky.id)}
+            onEditingChange={(isEditing) => setEditingSticky(isEditing ? sticky.id : null)}
+            onEditorRef={(ref) => setActiveEditor(ref)}
           />
             </React.Fragment>
           )
@@ -614,6 +617,8 @@ function BoardContent() {
               isBold={allBold}
               isItalic={allItalic}
               isUnderline={allUnderline}
+              isEditing={!!editingSticky}
+              activeEditor={activeEditor}
               onColorChange={(color) => {
                 selectedIds.forEach(id => updateStickyColor(id, color))
               }}
@@ -621,7 +626,23 @@ function BoardContent() {
                 selectedIds.forEach(id => updateStickyFontSize(id, size))
               }}
               onFormatChange={(format) => {
-                selectedIds.forEach(id => updateStickyFormat(id, format))
+                if (editingSticky && activeEditor) {
+                  // In editing mode, apply format to selected text
+                  if (format.isBold !== undefined) {
+                    document.execCommand('bold', false)
+                  }
+                  if (format.isItalic !== undefined) {
+                    document.execCommand('italic', false)
+                  }
+                  if (format.isUnderline !== undefined) {
+                    document.execCommand('underline', false)
+                  }
+                  // Trigger input event to save changes
+                  activeEditor.dispatchEvent(new Event('input', { bubbles: true }))
+                } else {
+                  // In selection mode, apply format to whole notes
+                  selectedIds.forEach(id => updateStickyFormat(id, format))
+                }
               }}
               position={toolbarPosition}
               x={centerX - toolbarWidth / 2}
