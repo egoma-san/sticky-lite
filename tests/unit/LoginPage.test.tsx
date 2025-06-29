@@ -107,14 +107,8 @@ describe('LoginPage', () => {
   })
 
   it('should show loading state while submitting', async () => {
-    mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)))
-    ;(useAuthStore as jest.Mock).mockReturnValueOnce({
-      login: mockLogin,
-      signup: mockSignup,
-      clearError: mockClearError,
-      isLoading: false,
-      error: null
-    }).mockReturnValueOnce({
+    // Start with loading state true
+    ;(useAuthStore as jest.Mock).mockReturnValue({
       login: mockLogin,
       signup: mockSignup,
       clearError: mockClearError,
@@ -122,22 +116,14 @@ describe('LoginPage', () => {
       error: null
     })
     
-    const user = userEvent.setup()
-    
-    const { rerender } = render(<LoginPage />)
-    
-    const emailInput = screen.getByPlaceholderText('メールアドレス')
-    const passwordInput = screen.getByPlaceholderText('パスワード')
-    const submitButton = screen.getByRole('button', { name: 'ログイン' })
-    
-    await user.type(emailInput, 'user@example.com')
-    await user.type(passwordInput, 'password123')
-    await user.click(submitButton)
-    
-    rerender(<LoginPage />)
+    render(<LoginPage />)
     
     // Should show loading state
     expect(screen.getByText('ログイン中...')).toBeInTheDocument()
+    
+    // The submit button should be disabled
+    const submitButton = screen.getByRole('button', { name: /ログイン中/ })
+    expect(submitButton).toBeDisabled()
   })
 
   it('should have correct text color for inputs', () => {

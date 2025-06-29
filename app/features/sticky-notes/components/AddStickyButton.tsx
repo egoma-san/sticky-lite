@@ -19,6 +19,9 @@ export default function AddStickyButton({ boardRef, scale, position }: AddSticky
     { value: 'yellow', bg: 'bg-yellow-300', hover: 'hover:bg-yellow-400' },
     { value: 'blue', bg: 'bg-blue-300', hover: 'hover:bg-blue-400' },
     { value: 'pink', bg: 'bg-pink-300', hover: 'hover:bg-pink-400' },
+    { value: 'green', bg: 'bg-green-300', hover: 'hover:bg-green-400' },
+    { value: 'purple', bg: 'bg-purple-300', hover: 'hover:bg-purple-400' },
+    { value: 'orange', bg: 'bg-orange-300', hover: 'hover:bg-orange-400' },
   ]
 
   const handleAddClick = () => {
@@ -48,6 +51,12 @@ export default function AddStickyButton({ boardRef, scale, position }: AddSticky
         return { backgroundColor: '#93c5fd', hover: '#60a5fa' } // bg-blue-300 / bg-blue-400
       case 'pink':
         return { backgroundColor: '#f9a8d4', hover: '#f472b6' } // bg-pink-300 / bg-pink-400
+      case 'green':
+        return { backgroundColor: '#86efac', hover: '#4ade80' } // bg-green-300 / bg-green-400
+      case 'purple':
+        return { backgroundColor: '#d8b4fe', hover: '#c084fc' } // bg-purple-300 / bg-purple-400
+      case 'orange':
+        return { backgroundColor: '#fdba74', hover: '#fb923c' } // bg-orange-300 / bg-orange-400
       default:
         return { backgroundColor: '#fde047', hover: '#facc15' } // bg-yellow-300 / bg-yellow-400
     }
@@ -67,10 +76,10 @@ export default function AddStickyButton({ boardRef, scale, position }: AddSticky
       const mouseY = e.clientY
       
       // Calculate hover area that includes all color buttons
-      // Color picker extends upward, so we need to account for all 3 colors
+      // Color picker extends upward, so we need to account for all 6 colors
       const colorButtonHeight = 56 // Height of each color button (14 * 4 = 56px on sm screens)
       const gap = 8 // Gap between buttons
-      const totalColorPickerHeight = (colorButtonHeight * 3) + (gap * 2) + 8 // 3 buttons + 2 gaps + margin
+      const totalColorPickerHeight = (colorButtonHeight * 6) + (gap * 5) + 8 // 6 buttons + 5 gaps + margin
       
       const hoverPadding = 40 // Generous padding
       const isInHoverArea = 

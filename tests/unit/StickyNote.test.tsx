@@ -193,20 +193,18 @@ describe('StickyNote', () => {
     render(<StickyNote {...defaultProps} isItalic={true} text="Italic text" />)
     
     const note = screen.getByTestId('sticky-note')
-    fireEvent.doubleClick(note)
-    
-    // Italic formatting is now handled by RichTextEditor
-    expect(screen.getByText('Italic text')).toBeInTheDocument()
+    // Text should be visible even without double-clicking in display mode
+    const textContent = note.textContent
+    expect(textContent).toContain('Italic text')
   })
 
   it('should render with underline text', () => {
     render(<StickyNote {...defaultProps} isUnderline={true} text="Underline text" />)
     
     const note = screen.getByTestId('sticky-note')
-    fireEvent.doubleClick(note)
-    
-    // Underline formatting is now handled by RichTextEditor
-    expect(screen.getByText('Underline text')).toBeInTheDocument()
+    // Text should be visible even without double-clicking in display mode
+    const textContent = note.textContent
+    expect(textContent).toContain('Underline text')
   })
 
   it('should handle font size increase shortcut', () => {

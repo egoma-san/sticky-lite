@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     // 初回マウント時に認証状態をチェック
     checkAuth()
-  }, [])
+  }, [checkAuth])
 
   useEffect(() => {
     // ログインページは認証不要

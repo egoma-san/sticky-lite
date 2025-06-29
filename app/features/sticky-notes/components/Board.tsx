@@ -438,9 +438,9 @@ function BoardContent() {
             id={sticky.id}
             x={sticky.x}
             y={sticky.y}
-            text={sticky.text}
+            text={sticky.text || ''}
             richText={sticky.richText}
-            color={sticky.color || 'yellow'}
+            color={(sticky.color as any) || 'yellow'}
             size={sticky.size || 1}
             fontSize={sticky.fontSize || 16}
             isBold={sticky.isBold}

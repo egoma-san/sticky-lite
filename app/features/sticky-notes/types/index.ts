@@ -1,4 +1,4 @@
-export type StickyColor = 'yellow' | 'blue' | 'pink'
+export type StickyColor = 'yellow' | 'blue' | 'pink' | 'green' | 'purple' | 'orange'
 
 export interface Sticky {
   id: string

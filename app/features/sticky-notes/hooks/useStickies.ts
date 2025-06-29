@@ -28,12 +28,23 @@ export function useStickies() {
         supabaseStore.unsubscribeFromBoard()
       }
     }
-  }, [isAuthenticated, currentBoard?.id])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   // Return appropriate store based on authentication
   if (isAuthenticated && currentBoard) {
+    // Transform Supabase stickies to match local store format
+    const transformedStickies = supabaseStore.stickies.map(sticky => ({
+      ...sticky,
+      richText: (sticky as any).rich_text,
+      fontSize: (sticky as any).font_size,
+      isBold: (sticky as any).is_bold,
+      isItalic: (sticky as any).is_italic,
+      isUnderline: (sticky as any).is_underline,
+    }))
+    
     return {
-      stickies: supabaseStore.stickies,
+      stickies: transformedStickies,
       selectedColor: supabaseStore.selectedColor,
       isLoading: supabaseStore.isLoading,
       error: supabaseStore.error,
@@ -43,7 +54,13 @@ export function useStickies() {
       updateStickyPosition: supabaseStore.updateStickyPosition,
       updateStickySize: supabaseStore.updateStickySize,
       updateStickyFontSize: supabaseStore.updateStickyFontSize,
-      updateStickyFormat: supabaseStore.updateStickyFormat,
+      updateStickyFormat: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => {
+        return supabaseStore.updateStickyFormat(id, {
+          is_bold: format.isBold,
+          is_italic: format.isItalic,
+          is_underline: format.isUnderline
+        })
+      },
       deleteSticky: supabaseStore.deleteSticky,
       deleteMultiple: supabaseStore.deleteMultiple,
       clearAll: supabaseStore.clearAll,

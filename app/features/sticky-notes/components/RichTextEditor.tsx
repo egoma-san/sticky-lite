@@ -37,6 +37,7 @@ export default function RichTextEditor({
         editorRef.current.textContent = value
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Auto focus

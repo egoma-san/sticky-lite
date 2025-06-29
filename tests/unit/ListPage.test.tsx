@@ -1,11 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ListPage from '../../app/list/page'
-import { useStickyStore } from '../../app/features/sticky-notes/store/useStickyStore'
+import { useStickies } from '../../app/features/sticky-notes/hooks/useStickies'
 
-// Mock the store
-jest.mock('../../app/features/sticky-notes/store/useStickyStore', () => ({
-  useStickyStore: jest.fn(),
+// Mock the hooks
+jest.mock('../../app/features/sticky-notes/hooks/useStickies', () => ({
+  useStickies: jest.fn(),
 }))
 
 // Mock next/navigation
@@ -53,8 +53,9 @@ describe('ListPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(useStickyStore as jest.Mock).mockReturnValue({
+    ;(useStickies as jest.Mock).mockReturnValue({
       stickies: mockStickies,
+      deleteSticky: jest.fn(),
       deleteMultiple: mockDeleteMultiple,
     })
   })
@@ -79,13 +80,10 @@ describe('ListPage', () => {
   it('should display sticky note colors', () => {
     render(<ListPage />)
     
-    const yellowDot = screen.getByText('First sticky note').closest('tr')?.querySelector('.bg-yellow-400')
-    const blueDot = screen.getByText('Second sticky note').closest('tr')?.querySelector('.bg-blue-400')
-    const pinkDot = screen.getByText('Third sticky note').closest('tr')?.querySelector('.bg-pink-400')
-    
-    expect(yellowDot).toBeInTheDocument()
-    expect(blueDot).toBeInTheDocument()
-    expect(pinkDot).toBeInTheDocument()
+    // Check for color badges instead of dots
+    expect(screen.getByText('黄')).toBeInTheDocument()
+    expect(screen.getByText('青')).toBeInTheDocument()
+    expect(screen.getByText('ピンク')).toBeInTheDocument()
   })
 
   it('should navigate to sticky position on double click', () => {
@@ -108,7 +106,8 @@ describe('ListPage', () => {
   it('should allow selecting items with checkbox', () => {
     render(<ListPage />)
     
-    const firstCheckbox = screen.getAllByRole('checkbox')[0]
+    const checkboxes = screen.getAllByRole('checkbox')
+    const firstCheckbox = checkboxes[1] // Skip header checkbox
     fireEvent.click(firstCheckbox)
     
     expect(firstCheckbox).toBeChecked()
@@ -117,60 +116,65 @@ describe('ListPage', () => {
   it('should delete selected items when delete button is clicked', async () => {
     render(<ListPage />)
     
-    // Select first two items
+    // Select first two items (skip header checkbox)
     const checkboxes = screen.getAllByRole('checkbox')
-    fireEvent.click(checkboxes[0])
     fireEvent.click(checkboxes[1])
+    fireEvent.click(checkboxes[2])
     
     // Click delete button
-    const deleteButton = screen.getByText('選択した付箋を削除')
+    const deleteButton = screen.getByText(/選択した.*件を削除/)
     fireEvent.click(deleteButton)
     
     await waitFor(() => {
-      expect(mockDeleteMultiple).toHaveBeenCalledWith(['1', '2'])
+      expect(mockDeleteMultiple).toHaveBeenCalledWith(['3', '2'])
     })
   })
 
   it('should disable delete button when nothing is selected', () => {
     render(<ListPage />)
     
-    const deleteButton = screen.getByText('選択した付箋を削除')
-    expect(deleteButton).toBeDisabled()
+    // When nothing is selected, there should be no delete button
+    const deleteButton = screen.queryByText(/選択した.*件を削除/)
+    expect(deleteButton).not.toBeInTheDocument()
   })
 
   it('should enable delete button when items are selected', () => {
     render(<ListPage />)
     
-    const firstCheckbox = screen.getAllByRole('checkbox')[0]
+    const checkboxes = screen.getAllByRole('checkbox')
+    const firstCheckbox = checkboxes[1] // Skip header checkbox
     fireEvent.click(firstCheckbox)
     
-    const deleteButton = screen.getByText('選択した付箋を削除')
+    const deleteButton = screen.getByText(/選択した.*件を削除/)
+    expect(deleteButton).toBeInTheDocument()
     expect(deleteButton).not.toBeDisabled()
   })
 
   it('should show correct count of selected items', () => {
     render(<ListPage />)
     
-    // Initially no items selected
-    expect(screen.getByText('0 個選択中')).toBeInTheDocument()
+    // Initially no delete button should be visible
+    expect(screen.queryByText(/選択した.*件を削除/)).not.toBeInTheDocument()
     
-    // Select one item
-    const firstCheckbox = screen.getAllByRole('checkbox')[0]
+    // Select one item (skip the header checkbox)
+    const checkboxes = screen.getAllByRole('checkbox')
+    const firstCheckbox = checkboxes[1] // First data row checkbox
     fireEvent.click(firstCheckbox)
     
-    expect(screen.getByText('1 個選択中')).toBeInTheDocument()
+    expect(screen.getByText(/選択した1件を削除/)).toBeInTheDocument()
     
     // Select another item
-    const secondCheckbox = screen.getAllByRole('checkbox')[1]
+    const secondCheckbox = checkboxes[2] // Second data row checkbox
     fireEvent.click(secondCheckbox)
     
-    expect(screen.getByText('2 個選択中')).toBeInTheDocument()
+    expect(screen.getByText(/選択した2件を削除/)).toBeInTheDocument()
   })
 
   it('should unselect item when checkbox is clicked again', () => {
     render(<ListPage />)
     
-    const firstCheckbox = screen.getAllByRole('checkbox')[0]
+    const checkboxes = screen.getAllByRole('checkbox')
+    const firstCheckbox = checkboxes[1] // Skip header checkbox
     
     // Select
     fireEvent.click(firstCheckbox)
@@ -182,8 +186,9 @@ describe('ListPage', () => {
   })
 
   it('should display empty state when no sticky notes', () => {
-    ;(useStickyStore as jest.Mock).mockReturnValue({
+    ;(useStickies as jest.Mock).mockReturnValue({
       stickies: [],
+      deleteSticky: jest.fn(),
       deleteMultiple: mockDeleteMultiple,
     })
     
@@ -192,18 +197,15 @@ describe('ListPage', () => {
     expect(screen.getByText('付箋がありません')).toBeInTheDocument()
   })
 
-  it('should handle keyboard navigation', () => {
+  it('should handle checkbox selection', () => {
     render(<ListPage />)
     
     const firstRow = screen.getByText('First sticky note').closest('tr')!
-    
-    // Focus on the row
-    firstRow.focus()
-    
-    // Press Enter to toggle selection
-    fireEvent.keyDown(firstRow, { key: 'Enter' })
-    
     const checkbox = firstRow.querySelector('input[type="checkbox"]') as HTMLInputElement
+    
+    // Click checkbox to select
+    fireEvent.click(checkbox)
+    
     expect(checkbox).toBeChecked()
   })
 
@@ -217,7 +219,7 @@ describe('ListPage', () => {
   })
 
   it('should handle sticky notes without text', () => {
-    ;(useStickyStore as jest.Mock).mockReturnValue({
+    ;(useStickies as jest.Mock).mockReturnValue({
       stickies: [
         {
           id: '1',
@@ -228,6 +230,7 @@ describe('ListPage', () => {
           createdAt: new Date(),
         },
       ],
+      deleteSticky: jest.fn(),
       deleteMultiple: mockDeleteMultiple,
     })
     

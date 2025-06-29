@@ -47,7 +47,7 @@ export default function BoardSharing() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[480px] max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Share "{currentBoard.name}"</h3>
+              <h3 className="text-lg font-semibold">Share &ldquo;{currentBoard.name}&rdquo;</h3>
               <button
                 onClick={() => {
                   setShowModal(false)
