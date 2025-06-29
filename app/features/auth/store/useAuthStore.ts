@@ -126,7 +126,11 @@ export const useAuthStore = create<AuthState>()(
       try {
         const { data, error } = await client.auth.signUp({
           email,
-          password
+          password,
+          options: {
+            // メール確認をスキップしてすぐにログイン可能にする
+            emailRedirectTo: `${window.location.origin}/`
+          }
         })
         
         if (error) {
@@ -134,13 +138,40 @@ export const useAuthStore = create<AuthState>()(
           return false
         }
         
-        if (data.user) {
+        // Supabaseの設定によっては、メール確認が必要な場合がある
+        if (data.user && !data.session) {
+          set({ 
+            error: 'メールを確認してアカウントを有効化してください', 
+            isLoading: false 
+          })
+          return false
+        }
+        
+        if (data.user && data.session) {
           set({ 
             isAuthenticated: true, 
             user: data.user,
             isLoading: false 
           })
           return true
+        }
+        
+        // 自動ログインを試みる
+        if (data.user && !data.session) {
+          // 新規登録後に自動でログインを試みる
+          const { data: loginData, error: loginError } = await client.auth.signInWithPassword({
+            email,
+            password
+          })
+          
+          if (!loginError && loginData.user) {
+            set({ 
+              isAuthenticated: true, 
+              user: loginData.user,
+              isLoading: false 
+            })
+            return true
+          }
         }
         
         return false

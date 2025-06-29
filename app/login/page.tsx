@@ -46,6 +46,11 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-2 sm:p-3 text-xs sm:text-sm text-red-700">
               {error}
+              {error === 'メールを確認してアカウントを有効化してください' && (
+                <p className="mt-2 text-xs">
+                  登録したメールアドレスに確認メールが送信されました。メール内のリンクをクリックしてアカウントを有効化してください。
+                </p>
+              )}
             </div>
           )}
 

@@ -515,8 +515,13 @@ function BoardContent() {
               </span>
               <button
                 onClick={() => {
-                  logout()
-                  // Don't redirect, just stay on the board
+                  const confirmLogout = window.confirm(
+                    'ログアウトすると、クラウドの付箋にアクセスできなくなります。\nローカルには保存されません。\n\n本当にログアウトしますか？'
+                  )
+                  if (confirmLogout) {
+                    logout()
+                    // Don't redirect, just stay on the board
+                  }
                 }}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:shadow-lg hover:bg-red-600 transition-all flex items-center gap-2"
               >

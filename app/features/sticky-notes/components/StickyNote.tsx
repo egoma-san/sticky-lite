@@ -62,8 +62,18 @@ export default function StickyNote({
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
   const [peelAnimationType, setPeelAnimationType] = useState<'peel-off' | 'peel-corner'>('peel-off')
+  const [localSize, setLocalSize] = useState(size)
+  const [localPosition, setLocalPosition] = useState({ x, y })
   const noteRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
+  
+  // Sync props with local state when not resizing
+  useEffect(() => {
+    if (!isResizing) {
+      setLocalSize(size)
+      setLocalPosition({ x, y })
+    }
+  }, [size, x, y, isResizing])
 
   const getGradientColors = () => {
     switch (color) {
@@ -293,11 +303,18 @@ export default function StickyNote({
             break
         }
         
-        onSizeChange(id, newSize)
-        onPositionChange(id, newX, newY)
+        // Update local state only during resize
+        setLocalSize(newSize)
+        setLocalPosition({ x: newX, y: newY })
       }
 
       const handleMouseUp = () => {
+        // Save final size and position to database
+        if (localSize !== size || localPosition.x !== x || localPosition.y !== y) {
+          onSizeChange(id, localSize)
+          onPositionChange(id, localPosition.x, localPosition.y)
+        }
+        
         setIsResizing(false)
         setResizeStart(null)
       }
@@ -325,12 +342,12 @@ export default function StickyNote({
         isCrumpling ? (deletionType === 'peel' ? `animate-${peelAnimationType}` : 'animate-crumple') : ''
       }`}
       style={{
-        left: `${x}px`,
-        top: `${y}px`,
-        width: `${192 * size}px`,
-        height: `${192 * size}px`,
+        left: `${isResizing ? localPosition.x : x}px`,
+        top: `${isResizing ? localPosition.y : y}px`,
+        width: `${192 * (isResizing ? localSize : size)}px`,
+        height: `${192 * (isResizing ? localSize : size)}px`,
         transform: 'scale(1) rotate(0deg)',
-        transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out',
+        transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out, left 0.2s ease-out, top 0.2s ease-out',
       }}
       draggable
       onDragStart={handleDragStart}

@@ -3,6 +3,7 @@ import { createClient } from '@/app/lib/supabase/client'
 import { useBoardStore } from '@/app/features/boards/store/useBoardStore'
 import type { Database } from '@/types/supabase'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { throttle, debounce } from '../utils/timing'
 
 type StickyDB = Database['public']['Tables']['stickies']['Row']
 type StickyInsert = Database['public']['Tables']['stickies']['Insert']
@@ -37,6 +38,7 @@ interface StickyStore {
   subscribeToBoard: (boardId: string) => void
   unsubscribeFromBoard: () => void
   clearError: () => void
+  setError: (error: string) => void
 }
 
 let supabase: ReturnType<typeof createClient> | null = null
@@ -130,43 +132,63 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
     }
   },
 
-  updateStickyText: async (id: string, text: string, richText?: string) => {
-    try {
-      const { error } = await getSupabase()
-        .from('stickies')
-        .update({ text, rich_text: richText })
-        .eq('id', id)
+  updateStickyText: (() => {
+    // Create a debounced version for database updates
+    const debouncedDbUpdate = debounce(async (id: string, text: string, richText?: string) => {
+      try {
+        const { error } = await getSupabase()
+          .from('stickies')
+          .update({ text, rich_text: richText })
+          .eq('id', id)
 
-      if (error) throw error
+        if (error) throw error
+      } catch (error) {
+        get().setError('Failed to update sticky text')
+      }
+    }, 500) // Wait 500ms after user stops typing
 
+    // Return the main function
+    return async (id: string, text: string, richText?: string) => {
+      // Update local state immediately for smooth UI
       set((state) => ({
         stickies: state.stickies.map(sticky =>
           sticky.id === id ? { ...sticky, text, rich_text: richText || null } : sticky
         )
       }))
-    } catch (error) {
-      set({ error: 'Failed to update sticky text' })
+      
+      // Debounce database updates
+      debouncedDbUpdate(id, text, richText)
     }
-  },
+  })(),
 
-  updateStickyPosition: async (id: string, x: number, y: number) => {
-    try {
-      const { error } = await getSupabase()
-        .from('stickies')
-        .update({ x, y })
-        .eq('id', id)
+  updateStickyPosition: (() => {
+    // Create a throttled version for database updates
+    const throttledDbUpdate = throttle(async (id: string, x: number, y: number) => {
+      try {
+        const { error } = await getSupabase()
+          .from('stickies')
+          .update({ x, y })
+          .eq('id', id)
 
-      if (error) throw error
+        if (error) throw error
+      } catch (error) {
+        get().setError('Failed to update sticky position')
+      }
+    }, 200) // Update at most every 200ms
 
+    // Return the main function
+    return async (id: string, x: number, y: number) => {
+      // Update local state immediately for smooth UI
       set((state) => ({
         stickies: state.stickies.map(sticky =>
           sticky.id === id ? { ...sticky, x, y } : sticky
         )
       }))
-    } catch (error) {
-      set({ error: 'Failed to update sticky position' })
+      
+      // Throttle database updates
+      throttledDbUpdate(id, x, y)
     }
-  },
+  })(),
 
   updateStickySize: async (id: string, size: number) => {
     try {
@@ -337,5 +359,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
     }
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+  
+  setError: (error: string) => set({ error })
 }))

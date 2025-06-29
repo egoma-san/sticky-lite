@@ -18,7 +18,7 @@ export function useStickies() {
   // Supabase store (for authenticated users)
   const supabaseStore = useSupabaseStickyStore()
 
-  // Create default board for authenticated users
+  // Create default board for authenticated users and merge local data
   useEffect(() => {
     const initializeBoard = async () => {
       if (isAuthenticated && user && !currentBoard) {
@@ -28,15 +28,62 @@ export function useStickies() {
         // Get the updated state
         const boards = useBoardStore.getState().boards
         
+        let targetBoard = null
+        
         if (boards.length === 0) {
           // Create a default board if user has none
           const newBoard = await createBoard(`${user.email}'s Board`)
           if (newBoard) {
+            targetBoard = newBoard
             setCurrentBoard(newBoard)
           }
         } else {
           // Use the first board as current
+          targetBoard = boards[0]
           setCurrentBoard(boards[0])
+        }
+        
+        // Merge local stickies to cloud if there are any
+        if (targetBoard && localStore.stickies.length > 0) {
+          const localStickies = localStore.stickies
+          
+          // Show confirmation dialog
+          const shouldMerge = window.confirm(
+            `ローカルに${localStickies.length}個の付箋があります。\nクラウドにアップロードしますか？\n\n「OK」: ローカルの付箋をクラウドに追加\n「キャンセル」: ローカルの付箋を破棄`
+          )
+          
+          if (shouldMerge) {
+            // Upload local stickies to cloud
+            for (const sticky of localStickies) {
+              await supabaseStore.addSticky(sticky.x, sticky.y, sticky.color)
+              const newStickies = supabaseStore.stickies
+              const newSticky = newStickies[newStickies.length - 1]
+              
+              if (newSticky && sticky.text) {
+                await supabaseStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
+              }
+              if (newSticky && sticky.size !== 1) {
+                await supabaseStore.updateStickySize(newSticky.id, sticky.size)
+              }
+              if (newSticky && sticky.fontSize !== 16) {
+                await supabaseStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
+              }
+              if (newSticky && (sticky.isBold || sticky.isItalic || sticky.isUnderline)) {
+                await supabaseStore.updateStickyFormat(newSticky.id, {
+                  is_bold: sticky.isBold,
+                  is_italic: sticky.isItalic,
+                  is_underline: sticky.isUnderline
+                })
+              }
+            }
+            
+            // Clear local storage after successful merge
+            localStore.clearAll()
+            window.alert(`${localStickies.length}個の付箋をクラウドにアップロードしました`)
+          } else {
+            // User chose to discard local stickies
+            localStore.clearAll()
+          }
         }
       }
     }
