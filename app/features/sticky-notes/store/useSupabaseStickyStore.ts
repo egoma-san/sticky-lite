@@ -30,6 +30,7 @@ interface StickyStore {
   updateStickyText: (id: string, text: string, richText?: string) => Promise<void>
   updateStickyPosition: (id: string, x: number, y: number) => Promise<void>
   updateStickySize: (id: string, size: number) => Promise<void>
+  updateStickyColor: (id: string, color: StickyColor) => Promise<void>
   updateStickyFontSize: (id: string, fontSize: number) => Promise<void>
   updateStickyFormat: (id: string, format: { is_bold?: boolean; is_italic?: boolean; is_underline?: boolean }) => Promise<void>
   deleteSticky: (id: string) => Promise<void>
@@ -206,6 +207,25 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
       }))
     } catch (error) {
       set({ error: 'Failed to update sticky size' })
+    }
+  },
+
+  updateStickyColor: async (id: string, color: StickyColor) => {
+    try {
+      const { error } = await getSupabase()
+        .from('stickies')
+        .update({ color })
+        .eq('id', id)
+
+      if (error) throw error
+
+      set((state) => ({
+        stickies: state.stickies.map(sticky =>
+          sticky.id === id ? { ...sticky, color } : sticky
+        )
+      }))
+    } catch (error) {
+      set({ error: 'Failed to update sticky color' })
     }
   },
 

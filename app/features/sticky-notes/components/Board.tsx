@@ -20,7 +20,7 @@ function BoardContent() {
   const { logout, isAuthenticated, user } = useAuthStore()
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyColor, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -467,6 +467,7 @@ function BoardContent() {
             onTextChange={updateStickyText}
             onPositionChange={updateStickyPosition}
             onSizeChange={updateStickySize}
+            onColorChange={updateStickyColor}
             onFontSizeChange={updateStickyFontSize}
             onFormatChange={updateStickyFormat}
             onDelete={(id) => handleDeleteWithAnimation([id], 'crumple')}

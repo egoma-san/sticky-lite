@@ -23,6 +23,7 @@ export interface StickyStore {
   updateStickyText: (id: string, text: string, richText?: string) => void
   updateStickyPosition: (id: string, x: number, y: number) => void
   updateStickySize: (id: string, size: number) => void
+  updateStickyColor: (id: string, color: StickyColor) => void
   updateStickyFontSize: (id: string, fontSize: number) => void
   updateStickyFormat: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
   deleteSticky: (id: string) => void

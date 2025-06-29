@@ -53,33 +53,60 @@ export function useStickies() {
           )
           
           if (shouldMerge) {
-            // Upload local stickies to cloud
-            for (const sticky of localStickies) {
-              await supabaseStore.addSticky(sticky.x, sticky.y, sticky.color)
-              const newStickies = supabaseStore.stickies
-              const newSticky = newStickies[newStickies.length - 1]
+            // Wait for cloud stickies to be loaded
+            await supabaseStore.fetchStickies(targetBoard.id)
+            const cloudStickies = supabaseStore.stickies
+            
+            // Check for duplicates based on position and content
+            const isDuplicate = (localSticky: any) => {
+              return cloudStickies.some(cloudSticky => 
+                Math.abs(cloudSticky.x - localSticky.x) < 5 && // Allow 5px tolerance
+                Math.abs(cloudSticky.y - localSticky.y) < 5 &&
+                cloudSticky.text === localSticky.text &&
+                cloudSticky.color === localSticky.color &&
+                (cloudSticky as any).size === (localSticky.size || 1)
+              )
+            }
+            
+            // Filter out duplicates
+            const uniqueStickies = localStickies.filter(sticky => !isDuplicate(sticky))
+            
+            if (uniqueStickies.length === 0) {
+              window.alert('すべての付箋は既にクラウドに存在します')
+            } else {
+              // Upload only unique stickies
+              for (const sticky of uniqueStickies) {
+                await supabaseStore.addSticky(sticky.x, sticky.y, sticky.color)
+                const newStickies = supabaseStore.stickies
+                const newSticky = newStickies[newStickies.length - 1]
+                
+                if (newSticky && sticky.text) {
+                  await supabaseStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
+                }
+                if (newSticky && sticky.size && sticky.size !== 1) {
+                  await supabaseStore.updateStickySize(newSticky.id, sticky.size)
+                }
+                if (newSticky && sticky.fontSize && sticky.fontSize !== 16) {
+                  await supabaseStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
+                }
+                if (newSticky && (sticky.isBold || sticky.isItalic || sticky.isUnderline)) {
+                  await supabaseStore.updateStickyFormat(newSticky.id, {
+                    is_bold: sticky.isBold,
+                    is_italic: sticky.isItalic,
+                    is_underline: sticky.isUnderline
+                  })
+                }
+              }
               
-              if (newSticky && sticky.text) {
-                await supabaseStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
-              }
-              if (newSticky && sticky.size && sticky.size !== 1) {
-                await supabaseStore.updateStickySize(newSticky.id, sticky.size)
-              }
-              if (newSticky && sticky.fontSize && sticky.fontSize !== 16) {
-                await supabaseStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
-              }
-              if (newSticky && (sticky.isBold || sticky.isItalic || sticky.isUnderline)) {
-                await supabaseStore.updateStickyFormat(newSticky.id, {
-                  is_bold: sticky.isBold,
-                  is_italic: sticky.isItalic,
-                  is_underline: sticky.isUnderline
-                })
-              }
+              const duplicateCount = localStickies.length - uniqueStickies.length
+              const message = duplicateCount > 0 
+                ? `${uniqueStickies.length}個の付箋をクラウドにアップロードしました（${duplicateCount}個は重複のためスキップ）`
+                : `${uniqueStickies.length}個の付箋をクラウドにアップロードしました`
+              window.alert(message)
             }
             
             // Clear local storage after successful merge
             localStore.clearAll()
-            window.alert(`${localStickies.length}個の付箋をクラウドにアップロードしました`)
           } else {
             // User chose to discard local stickies
             localStore.clearAll()
@@ -127,6 +154,7 @@ export function useStickies() {
       updateStickyText: supabaseStore.updateStickyText,
       updateStickyPosition: supabaseStore.updateStickyPosition,
       updateStickySize: supabaseStore.updateStickySize,
+      updateStickyColor: supabaseStore.updateStickyColor,
       updateStickyFontSize: supabaseStore.updateStickyFontSize,
       updateStickyFormat: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => {
         return supabaseStore.updateStickyFormat(id, {
@@ -163,6 +191,10 @@ export function useStickies() {
     },
     updateStickySize: (id: string, size: number) => {
       localStore.updateStickySize(id, size)
+      return Promise.resolve()
+    },
+    updateStickyColor: (id: string, color: any) => {
+      localStore.updateStickyColor(id, color)
       return Promise.resolve()
     },
     updateStickyFontSize: (id: string, fontSize: number) => {

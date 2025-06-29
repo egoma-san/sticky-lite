@@ -5,6 +5,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { StickyColor } from '../types'
 import { isModifierKeyPressed } from '../utils/platform'
 import RichTextEditor from './RichTextEditor'
+import StickyFormatToolbar from './StickyFormatToolbar'
 
 interface StickyNoteProps {
   id: string
@@ -26,6 +27,7 @@ interface StickyNoteProps {
   onTextChange: (id: string, text: string, richText?: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
   onSizeChange: (id: string, size: number) => void
+  onColorChange: (id: string, color: StickyColor) => void
   onFontSizeChange: (id: string, fontSize: number) => void
   onFormatChange: (id: string, format: { isBold?: boolean; isItalic?: boolean; isUnderline?: boolean }) => void
   onDelete: (id: string) => void
@@ -51,6 +53,7 @@ export default function StickyNote({
   onTextChange,
   onPositionChange,
   onSizeChange,
+  onColorChange,
   onFontSizeChange,
   onFormatChange,
   onDelete,
@@ -331,31 +334,32 @@ export default function StickyNote({
   }, [isResizing, resizeStart, id, x, y, onSizeChange, onPositionChange])
 
   return (
-    <div
-      ref={noteRef}
-      id={id}
-      data-testid="sticky-note"
-      className={`absolute transition-all duration-300 ${
-        isEditing ? 'cursor-text' : isResizing ? 'cursor-nwse-resize' : 'cursor-move'
-      } ${
-        isDragging ? 'opacity-50' : ''
-      } ${isSelected ? 'z-10' : ''} ${
-        isCrumpling ? (deletionType === 'peel' ? `animate-${peelAnimationType}` : 'animate-crumple') : ''
-      }`}
-      style={{
-        left: `${isResizing ? localPosition.x : x}px`,
-        top: `${isResizing ? localPosition.y : y}px`,
-        width: `${192 * (isResizing ? localSize : size)}px`,
-        height: `${192 * (isResizing ? localSize : size)}px`,
-        transform: 'scale(1) rotate(0deg)',
-        transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out, left 0.2s ease-out, top 0.2s ease-out',
-      }}
-      draggable
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
-    >
+    <>
+      <div
+        ref={noteRef}
+        id={id}
+        data-testid="sticky-note"
+        className={`absolute transition-all duration-300 ${
+          isEditing ? 'cursor-text' : isResizing ? 'cursor-nwse-resize' : 'cursor-move'
+        } ${
+          isDragging ? 'opacity-50' : ''
+        } ${isSelected ? 'z-10' : ''} ${
+          isCrumpling ? (deletionType === 'peel' ? `animate-${peelAnimationType}` : 'animate-crumple') : ''
+        }`}
+        style={{
+          left: `${isResizing ? localPosition.x : x}px`,
+          top: `${isResizing ? localPosition.y : y}px`,
+          width: `${192 * (isResizing ? localSize : size)}px`,
+          height: `${192 * (isResizing ? localSize : size)}px`,
+          transform: 'scale(1) rotate(0deg)',
+          transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out, left 0.2s ease-out, top 0.2s ease-out',
+        }}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      >
       {/* Main sticky note body */}
       <div className={`relative w-full h-full overflow-hidden ${
         color === 'yellow' ? 'bg-yellow-300' : 
@@ -527,5 +531,25 @@ export default function StickyNote({
         </>
       )}
     </div>
+      
+      {/* Format toolbar */}
+      {(isSelected || isEditing) && !hasMultipleSelection && (
+        <StickyFormatToolbar
+          color={color}
+          fontSize={fontSize}
+          isBold={isBold}
+          isItalic={isItalic}
+          isUnderline={isUnderline}
+          onColorChange={(newColor) => onColorChange(id, newColor)}
+          onFontSizeChange={(newSize) => onFontSizeChange(id, newSize)}
+          onFormatChange={(format) => onFormatChange(id, format)}
+          position={y > 100 ? 'top' : 'bottom'}
+          x={x}
+          y={y}
+          width={192 * size}
+          height={192 * size}
+        />
+      )}
+    </>
   )
 }

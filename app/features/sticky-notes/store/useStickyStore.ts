@@ -41,6 +41,12 @@ export const useStickyStore = create<StickyStore>()(
         )
       })),
       
+      updateStickyColor: (id, color) => set((state) => ({
+        stickies: state.stickies.map(sticky =>
+          sticky.id === id ? { ...sticky, color } : sticky
+        )
+      })),
+      
       updateStickyFontSize: (id, fontSize) => set((state) => ({
         stickies: state.stickies.map(sticky =>
           sticky.id === id ? { ...sticky, fontSize } : sticky
