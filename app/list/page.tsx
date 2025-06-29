@@ -7,9 +7,14 @@ import { useStickies } from '../features/sticky-notes/hooks/useStickies'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
 import { isSupabaseEnabled } from '@/app/lib/features'
 
+type SortKey = 'content' | 'color' | 'createdAt' | null
+type SortOrder = 'asc' | 'desc'
+
 export default function ListPage() {
   const { stickies, deleteSticky, deleteMultiple } = useStickies()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
+  const [sortKey, setSortKey] = React.useState<SortKey>(null)
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>('asc')
   const router = useRouter()
   const { logout, isAuthenticated, user } = useAuthStore()
 
@@ -45,9 +50,59 @@ export default function ListPage() {
     }
   }
 
-  const sortedStickies = [...stickies].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      if (sortOrder === 'asc') {
+        setSortOrder('desc')
+      } else {
+        // Reset sort
+        setSortKey(null)
+        setSortOrder('asc')
+      }
+    } else {
+      setSortKey(key)
+      setSortOrder('asc')
+    }
+  }
+
+  const sortedStickies = React.useMemo(() => {
+    const sorted = [...stickies]
+    
+    if (!sortKey) {
+      // Default sort by creation date (newest first)
+      return sorted.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    }
+    
+    sorted.sort((a, b) => {
+      let aValue: any
+      let bValue: any
+      
+      switch (sortKey) {
+        case 'content':
+          aValue = a.text || ''
+          bValue = b.text || ''
+          break
+        case 'color':
+          aValue = a.color
+          bValue = b.color
+          break
+        case 'createdAt':
+          aValue = new Date(a.createdAt).getTime()
+          bValue = new Date(b.createdAt).getTime()
+          break
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      }
+    })
+    
+    return sorted
+  }, [stickies, sortKey, sortOrder])
 
   const getColorClass = (color: string) => {
     switch (color) {
@@ -156,9 +211,57 @@ export default function ListPage() {
                       className="w-4 h-4 rounded border-gray-300"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">内容</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-24">色</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-32">作成日時</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    <button
+                      onClick={() => handleSort('content')}
+                      className={`flex items-center gap-1 w-full text-left transition-all ${
+                        sortKey === 'content' 
+                          ? 'transform translate-y-0.5 shadow-inner bg-gray-200 rounded px-2 py-1' 
+                          : 'hover:bg-gray-200 rounded px-2 py-1'
+                      }`}
+                    >
+                      内容
+                      {sortKey === 'content' && (
+                        <svg className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-24">
+                    <button
+                      onClick={() => handleSort('color')}
+                      className={`flex items-center gap-1 w-full text-left transition-all ${
+                        sortKey === 'color' 
+                          ? 'transform translate-y-0.5 shadow-inner bg-gray-200 rounded px-2 py-1' 
+                          : 'hover:bg-gray-200 rounded px-2 py-1'
+                      }`}
+                    >
+                      色
+                      {sortKey === 'color' && (
+                        <svg className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 w-32">
+                    <button
+                      onClick={() => handleSort('createdAt')}
+                      className={`flex items-center gap-1 w-full text-left transition-all ${
+                        sortKey === 'createdAt' 
+                          ? 'transform translate-y-0.5 shadow-inner bg-gray-200 rounded px-2 py-1' 
+                          : 'hover:bg-gray-200 rounded px-2 py-1'
+                      }`}
+                    >
+                      作成日時
+                      {sortKey === 'createdAt' && (
+                        <svg className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </th>
                   <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-20">削除</th>
                 </tr>
               </thead>
