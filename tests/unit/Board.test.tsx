@@ -107,10 +107,10 @@ describe('Board', () => {
     
     fireEvent.drop(trashZone, { dataTransfer })
     
-    // Wait for the animation timeout in Board component
+    // Wait for the animation timeout in Board component (increased for peel animation)
     await waitFor(() => {
       expect(mockDeleteSticky).toHaveBeenCalledWith('test-1')
-    }, { timeout: 400 })
+    }, { timeout: 800 })
   })
 
   it('should deselect sticky after deletion', async () => {
@@ -127,7 +127,7 @@ describe('Board', () => {
     // Wait for animation timeout
     await waitFor(() => {
       expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1'])
-    }, { timeout: 400 })
+    }, { timeout: 600 })
   })
 
   it('should delete multiple selected stickies with keyboard', async () => {
@@ -147,7 +147,7 @@ describe('Board', () => {
     // Wait for animation timeout
     await waitFor(() => {
       expect(mockDeleteMultiple).toHaveBeenCalledWith(['test-1', 'test-2'])
-    }, { timeout: 400 })
+    }, { timeout: 600 })
   })
 
   it('should add sticky on double click', () => {
@@ -266,7 +266,7 @@ describe('Board', () => {
     
     const zoomOut = screen.getByText('−')
     const zoomIn = screen.getByText('+')
-    const zoomDisplay = screen.getByDisplayValue('100%')
+    const zoomDisplay = screen.getByText('100%')
     
     expect(zoomOut).toBeInTheDocument()
     expect(zoomIn).toBeInTheDocument()

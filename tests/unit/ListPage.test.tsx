@@ -203,10 +203,10 @@ describe('ListPage', () => {
   it('should format creation date correctly', () => {
     render(<ListPage />)
     
-    // Check that dates are displayed
-    expect(screen.getByText('2024/01/01')).toBeInTheDocument()
-    expect(screen.getByText('2024/01/02')).toBeInTheDocument()
-    expect(screen.getByText('2024/01/03')).toBeInTheDocument()
+    // Check that dates are displayed in M/D HH:mm format
+    expect(screen.getByText('1/1 09:00')).toBeInTheDocument()
+    expect(screen.getByText('1/2 09:00')).toBeInTheDocument()
+    expect(screen.getByText('1/3 09:00')).toBeInTheDocument()
   })
 
   it('should handle sticky notes without text', () => {
