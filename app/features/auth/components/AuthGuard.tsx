@@ -11,7 +11,12 @@ interface AuthGuardProps {
 export default function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore()
+
+  useEffect(() => {
+    // 初回マウント時に認証状態をチェック
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     // ログインページは認証不要
@@ -19,11 +24,20 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       return
     }
 
-    // 未認証の場合はログインページへリダイレクト
-    if (!isAuthenticated) {
+    // 認証チェック完了後、未認証の場合はログインページへリダイレクト
+    if (!isLoading && !isAuthenticated) {
       router.push('/login')
     }
-  }, [isAuthenticated, pathname, router])
+  }, [isAuthenticated, isLoading, pathname, router])
+
+  // ローディング中はスピナーを表示
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500" />
+      </div>
+    )
+  }
 
   // ログインページまたは認証済みの場合は子要素を表示
   if (pathname === '/login' || isAuthenticated) {

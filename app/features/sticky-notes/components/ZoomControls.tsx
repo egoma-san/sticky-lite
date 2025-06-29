@@ -61,7 +61,9 @@ export default function ZoomControls({ scale, minScale, maxScale, onScaleChange 
     if (!isNaN(value) && value > 0) {
       const newPercentage = Math.min(200, Math.max(10, value))
       const newScale = newPercentage / 100
-      onScaleChange(newScale)
+      if (Math.abs(newScale - scale) > 0.001) { // Only call if scale actually changes
+        onScaleChange(newScale)
+      }
     }
     setIsEditing(false)
     setInputValue('')

@@ -7,27 +7,22 @@ import { useAuthStore } from '../features/auth/store/useAuthStore'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [isSignup, setIsSignup] = useState(false)
   const router = useRouter()
-  const login = useAuthStore((state) => state.login)
+  const { login, signup, isLoading, error, clearError } = useAuthStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    clearError()
     
-    // Simulate async login process
-    setTimeout(() => {
-      const success = login(email, password)
-      if (success) {
-        router.push('/')
-      } else {
-        setError('メールアドレスまたはパスワードが正しくありません')
-      }
-      setIsLoading(false)
-    }, 1000)
+    const success = isSignup 
+      ? await signup(email, password)
+      : await login(email, password)
+    
+    if (success) {
+      router.push('/')
+    }
   }
 
   return (
@@ -43,7 +38,7 @@ export default function LoginPage() {
         {/* Login form */}
         <div className="bg-white rounded-3xl shadow-lg p-5 sm:p-8 space-y-3 sm:space-y-6">
           <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
-            ログイン
+            {isSignup ? '新規登録' : 'ログイン'}
           </h2>
 
           {/* エラーメッセージ */}
@@ -111,23 +106,48 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  ログイン中...
+                  {isSignup ? '登録中...' : 'ログイン中...'}
                 </span>
               ) : (
-                'ログイン'
+                isSignup ? '新規登録' : 'ログイン'
               )}
             </button>
           </form>
 
           <div className="space-y-2">
-            <button className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors">
-              パスワードを忘れた方
-            </button>
-            <div className="text-center text-xs sm:text-sm text-gray-600">
-              アカウントをお持ちでない方は
-              <button className="text-blue-600 hover:text-blue-800 ml-1 transition-colors">
-                新規登録
+            {!isSignup && (
+              <button className="w-full text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                パスワードを忘れた方
               </button>
+            )}
+            <div className="text-center text-xs sm:text-sm text-gray-600">
+              {isSignup ? (
+                <>
+                  すでにアカウントをお持ちの方は
+                  <button 
+                    onClick={() => {
+                      setIsSignup(false)
+                      clearError()
+                    }}
+                    className="text-blue-600 hover:text-blue-800 ml-1 transition-colors"
+                  >
+                    ログイン
+                  </button>
+                </>
+              ) : (
+                <>
+                  アカウントをお持ちでない方は
+                  <button 
+                    onClick={() => {
+                      setIsSignup(true)
+                      clearError()
+                    }}
+                    className="text-blue-600 hover:text-blue-800 ml-1 transition-colors"
+                  >
+                    新規登録
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useStickyStore } from '../store/useStickyStore'
+import { useStickies } from '../hooks/useStickies'
 import { StickyColor } from '../types'
 
 interface AddStickyButtonProps {
@@ -11,7 +11,7 @@ interface AddStickyButtonProps {
 }
 
 export default function AddStickyButton({ boardRef, scale, position }: AddStickyButtonProps) {
-  const { addSticky, selectedColor, setSelectedColor } = useStickyStore()
+  const { addSticky, selectedColor, setSelectedColor } = useStickies()
   const [showColorPicker, setShowColorPicker] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 

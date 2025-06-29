@@ -1,16 +1,20 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Board } from '@/app/features/sticky-notes'
-import { useStickyStore } from '@/app/features/sticky-notes/store/useStickyStore'
+import { useStickies } from '@/app/features/sticky-notes/hooks/useStickies'
 
-// Mock the store
-jest.mock('@/app/features/sticky-notes/store/useStickyStore')
+// Mock the hooks
+jest.mock('@/app/features/sticky-notes/hooks/useStickies')
 
 // Mock the auth store
 jest.mock('@/app/features/auth/store/useAuthStore', () => ({
   useAuthStore: jest.fn(() => ({
-    logout: jest.fn()
+    logout: jest.fn(),
+    isAuthenticated: true
   }))
 }))
+
+// Mock the board store
+jest.mock('@/app/features/boards/store/useBoardStore')
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
@@ -36,9 +40,11 @@ describe('Board', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(useStickyStore as unknown as jest.Mock).mockReturnValue({
+    ;(useStickies as unknown as jest.Mock).mockReturnValue({
       stickies: mockStickies,
       selectedColor: 'yellow',
+      isLoading: false,
+      error: null,
       setSelectedColor: jest.fn(),
       addSticky: mockAddSticky,
       deleteSticky: mockDeleteSticky,
@@ -48,6 +54,8 @@ describe('Board', () => {
       updateStickySize: jest.fn(),
       updateStickyFontSize: jest.fn(),
       updateStickyFormat: jest.fn(),
+      clearAll: jest.fn(),
+      clearError: jest.fn()
     })
     
     // Mock Audio API

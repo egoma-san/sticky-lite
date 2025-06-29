@@ -184,10 +184,9 @@ describe('StickyNote', () => {
     render(<StickyNote {...defaultProps} isBold={true} text="Bold text" />)
     
     const note = screen.getByTestId('sticky-note')
-    fireEvent.doubleClick(note)
-    
-    // Bold formatting is now handled by RichTextEditor
-    expect(screen.getByText('Bold text')).toBeInTheDocument()
+    // Text should be visible even without double-clicking in display mode
+    const textContent = note.textContent
+    expect(textContent).toContain('Bold text')
   })
 
   it('should render with italic text', () => {

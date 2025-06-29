@@ -17,24 +17,30 @@ jest.mock('next/navigation', () => ({
 
 describe('LoginPage', () => {
   const mockLogin = jest.fn()
+  const mockSignup = jest.fn()
+  const mockClearError = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
     ;(useAuthStore as jest.Mock).mockReturnValue({
-      login: mockLogin
+      login: mockLogin,
+      signup: mockSignup,
+      clearError: mockClearError,
+      isLoading: false,
+      error: null
     })
   })
 
   it('should render login form', () => {
     render(<LoginPage />)
     
-    expect(screen.getByText('ログイン')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'ログイン' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText('メールアドレス')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('パスワード')).toBeInTheDocument()
   })
 
   it('should handle successful login', async () => {
-    mockLogin.mockReturnValue(true)
+    mockLogin.mockResolvedValue(true)
     const user = userEvent.setup()
     
     render(<LoginPage />)
@@ -54,7 +60,15 @@ describe('LoginPage', () => {
   })
 
   it('should show error on failed login', async () => {
-    mockLogin.mockReturnValue(false)
+    mockLogin.mockResolvedValue(false)
+    ;(useAuthStore as jest.Mock).mockReturnValue({
+      login: mockLogin,
+      signup: mockSignup,
+      clearError: mockClearError,
+      isLoading: false,
+      error: 'Invalid credentials'
+    })
+    
     const user = userEvent.setup()
     
     render(<LoginPage />)
@@ -68,7 +82,7 @@ describe('LoginPage', () => {
     await user.click(submitButton)
     
     await waitFor(() => {
-      expect(screen.getByText('メールアドレスまたはパスワードが正しくありません')).toBeInTheDocument()
+      expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
     })
   })
 
@@ -93,10 +107,24 @@ describe('LoginPage', () => {
   })
 
   it('should show loading state while submitting', async () => {
-    mockLogin.mockReturnValue(true)
+    mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)))
+    ;(useAuthStore as jest.Mock).mockReturnValueOnce({
+      login: mockLogin,
+      signup: mockSignup,
+      clearError: mockClearError,
+      isLoading: false,
+      error: null
+    }).mockReturnValueOnce({
+      login: mockLogin,
+      signup: mockSignup,
+      clearError: mockClearError,
+      isLoading: true,
+      error: null
+    })
+    
     const user = userEvent.setup()
     
-    render(<LoginPage />)
+    const { rerender } = render(<LoginPage />)
     
     const emailInput = screen.getByPlaceholderText('メールアドレス')
     const passwordInput = screen.getByPlaceholderText('パスワード')
@@ -106,7 +134,9 @@ describe('LoginPage', () => {
     await user.type(passwordInput, 'password123')
     await user.click(submitButton)
     
-    // Should show loading state immediately
+    rerender(<LoginPage />)
+    
+    // Should show loading state
     expect(screen.getByText('ログイン中...')).toBeInTheDocument()
   })
 

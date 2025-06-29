@@ -3,11 +3,11 @@
 import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useStickyStore } from '../features/sticky-notes'
+import { useStickies } from '../features/sticky-notes/hooks/useStickies'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
 
 export default function ListPage() {
-  const { stickies, deleteSticky, deleteMultiple } = useStickyStore()
+  const { stickies, deleteSticky, deleteMultiple } = useStickies()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
   const router = useRouter()
   const logout = useAuthStore((state) => state.logout)

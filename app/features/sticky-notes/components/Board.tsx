@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useStickyStore } from '../store/useStickyStore'
+import { useStickies } from '../hooks/useStickies'
 import StickyNote from './StickyNote'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
@@ -13,13 +13,15 @@ import { isModifierKeyPressed } from '../utils/platform'
 import { playPaperSound } from '../utils/deletionSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
+import BoardSelector from '../../boards/components/BoardSelector'
+import BoardSharing from '../../boards/components/BoardSharing'
 
 function BoardContent() {
   const router = useRouter()
   const logout = useAuthStore((state) => state.logout)
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickyStore()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
   
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
@@ -487,6 +489,15 @@ function BoardContent() {
       )}
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
+      
+      {/* Top controls */}
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8 flex items-center gap-2 z-50">
+        {/* Board selector */}
+        <BoardSelector />
+        
+        {/* Board sharing */}
+        <BoardSharing />
+      </div>
       
       {/* Top-right controls */}
       <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 flex items-center gap-2 z-50">

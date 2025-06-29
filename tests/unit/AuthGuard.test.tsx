@@ -24,7 +24,9 @@ describe('AuthGuard', () => {
   it('should render children when authenticated', () => {
     mockPathname.mockReturnValue('/')
     ;(useAuthStore as jest.Mock).mockReturnValue({
-      isAuthenticated: true
+      isAuthenticated: true,
+      isLoading: false,
+      checkAuth: jest.fn()
     })
 
     const { getByText } = render(
@@ -39,7 +41,9 @@ describe('AuthGuard', () => {
   it('should redirect to login when not authenticated', () => {
     mockPathname.mockReturnValue('/')
     ;(useAuthStore as jest.Mock).mockReturnValue({
-      isAuthenticated: false
+      isAuthenticated: false,
+      isLoading: false,
+      checkAuth: jest.fn()
     })
 
     render(
@@ -54,7 +58,9 @@ describe('AuthGuard', () => {
   it('should allow access to login page without authentication', () => {
     mockPathname.mockReturnValue('/login')
     ;(useAuthStore as jest.Mock).mockReturnValue({
-      isAuthenticated: false
+      isAuthenticated: false,
+      isLoading: false,
+      checkAuth: jest.fn()
     })
 
     const { getByText } = render(
