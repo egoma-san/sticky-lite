@@ -39,7 +39,14 @@ interface StickyStore {
   clearError: () => void
 }
 
-const supabase = createClient()
+let supabase: ReturnType<typeof createClient> | null = null
+
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = createClient()
+  }
+  return supabase
+}
 
 export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
   stickies: [],
@@ -51,14 +58,15 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
   setSelectedColor: (color) => set({ selectedColor: color }),
 
   fetchStickies: async (boardId: string) => {
-    if (!supabase) {
+    const client = getSupabase()
+    if (!client) {
       set({ stickies: [], isLoading: false })
       return
     }
     
     set({ isLoading: true, error: null })
     try {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from('stickies')
         .select('*')
         .eq('board_id', boardId)
@@ -66,7 +74,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
       if (error) throw error
 
-      const stickies: Sticky[] = (data || []).map(sticky => ({
+      const stickies: Sticky[] = (data || []).map((sticky: any) => ({
         ...sticky,
         createdAt: new Date(sticky.created_at),
         updatedAt: sticky.updated_at ? new Date(sticky.updated_at) : undefined
@@ -82,7 +90,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
     const currentBoard = useBoardStore.getState().currentBoard
     if (!currentBoard) return
 
-    const { data: user } = await supabase.auth.getUser()
+    const { data: user } = await getSupabase().auth.getUser()
     if (!user.user) return
 
     const selectedColor = color || get().selectedColor
@@ -102,7 +110,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
         is_underline: false
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('stickies')
         .insert(newSticky)
         .select()
@@ -124,7 +132,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   updateStickyText: async (id: string, text: string, richText?: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .update({ text, rich_text: richText })
         .eq('id', id)
@@ -143,7 +151,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   updateStickyPosition: async (id: string, x: number, y: number) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .update({ x, y })
         .eq('id', id)
@@ -162,7 +170,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   updateStickySize: async (id: string, size: number) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .update({ size })
         .eq('id', id)
@@ -181,7 +189,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   updateStickyFontSize: async (id: string, fontSize: number) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .update({ font_size: fontSize })
         .eq('id', id)
@@ -200,7 +208,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   updateStickyFormat: async (id: string, format: { is_bold?: boolean; is_italic?: boolean; is_underline?: boolean }) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .update(format)
         .eq('id', id)
@@ -219,7 +227,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   deleteSticky: async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .delete()
         .eq('id', id)
@@ -236,7 +244,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   deleteMultiple: async (ids: string[]) => {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .delete()
         .in('id', ids)
@@ -256,7 +264,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
     if (!currentBoard) return
 
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('stickies')
         .delete()
         .eq('board_id', currentBoard.id)
@@ -270,10 +278,12 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
   },
 
   subscribeToBoard: (boardId: string) => {
+    const client = getSupabase()
+    if (!client) return
     // 既存のチャンネルをクリーンアップ
     get().unsubscribeFromBoard()
 
-    const channel = supabase
+    const channel = client
       .channel(`board-${boardId}`)
       .on(
         'postgres_changes',
@@ -283,7 +293,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
           table: 'stickies',
           filter: `board_id=eq.${boardId}`
         },
-        (payload) => {
+        (payload: any) => {
           const { eventType, new: newRecord, old: oldRecord } = payload
 
           if (eventType === 'INSERT' && newRecord) {

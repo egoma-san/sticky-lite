@@ -14,7 +14,14 @@ interface AuthState {
   clearError: () => void
 }
 
-const supabase = createClient()
+let supabase: ReturnType<typeof createClient> | null = null
+
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = createClient()
+  }
+  return supabase
+}
 
 export const useAuthStore = create<AuthState>()(
   (set) => ({
@@ -23,14 +30,15 @@ export const useAuthStore = create<AuthState>()(
     isLoading: false,
     error: null,
     login: async (email: string, password: string) => {
-      if (!supabase) {
+      const client = getSupabase()
+      if (!client) {
         set({ error: 'Authentication service not available', isLoading: false })
         return false
       }
       
       set({ isLoading: true, error: null })
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await client.auth.signInWithPassword({
           email,
           password
         })
@@ -59,9 +67,11 @@ export const useAuthStore = create<AuthState>()(
       }
     },
     logout: async () => {
+      const client = getSupabase()
+      if (!client) return
       set({ isLoading: true })
       try {
-        await supabase.auth.signOut()
+        await client.auth.signOut()
         set({ 
           isAuthenticated: false, 
           user: null,
@@ -75,9 +85,15 @@ export const useAuthStore = create<AuthState>()(
       }
     },
     checkAuth: async () => {
+      const client = getSupabase()
+      if (!client) {
+        set({ isLoading: false })
+        return
+      }
+      
       set({ isLoading: true })
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user } } = await client.auth.getUser()
         
         if (user) {
           set({ 
@@ -101,9 +117,14 @@ export const useAuthStore = create<AuthState>()(
       }
     },
     signup: async (email: string, password: string) => {
+      const client = getSupabase()
+      if (!client) {
+        set({ error: 'Authentication service not available', isLoading: false })
+        return false
+      }
       set({ isLoading: true, error: null })
       try {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await client.auth.signUp({
           email,
           password
         })

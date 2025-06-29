@@ -23,7 +23,14 @@ interface BoardState {
   clearError: () => void
 }
 
-const supabase = createClient()
+let supabase: ReturnType<typeof createClient> | null = null
+
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = createClient()
+  }
+  return supabase
+}
 
 export const useBoardStore = create<BoardState>()((set, get) => ({
   boards: [],
@@ -35,14 +42,14 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   fetchBoards: async () => {
     set({ isLoading: true, error: null })
     try {
-      const { data: user } = await supabase.auth.getUser()
+      const { data: user } = await getSupabase().auth.getUser()
       if (!user.user) {
         set({ isLoading: false })
         return
       }
 
       // 自分が所有するボード
-      const { data: ownedBoards, error: ownedError } = await supabase
+      const { data: ownedBoards, error: ownedError } = await getSupabase()
         .from('boards')
         .select('*')
         .eq('owner_id', user.user.id)
@@ -50,7 +57,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
       if (ownedError) throw ownedError
 
       // 自分がメンバーのボード
-      const { data: memberBoards, error: memberError } = await supabase
+      const { data: memberBoards, error: memberError } = await getSupabase()
         .from('board_members')
         .select('boards(*)')
         .eq('user_id', user.user.id)
@@ -59,7 +66,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
       const allBoards = [
         ...(ownedBoards || []),
-        ...(memberBoards?.map(m => m.boards).filter(Boolean) || [])
+        ...(memberBoards?.map((m: any) => m.boards).filter(Boolean) || [])
       ]
 
       // 重複を除去
@@ -76,7 +83,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   fetchBoardMembers: async (boardId: string) => {
     set({ isLoading: true, error: null })
     try {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('board_members')
         .select('*')
         .eq('board_id', boardId)
@@ -92,10 +99,10 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   createBoard: async (name: string) => {
     set({ isLoading: true, error: null })
     try {
-      const { data: user } = await supabase.auth.getUser()
+      const { data: user } = await getSupabase().auth.getUser()
       if (!user.user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
+      const { data, error } = await getSupabase()
         .from('boards')
         .insert({ name, owner_id: user.user.id })
         .select()
@@ -104,7 +111,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
       if (error) throw error
 
       // オーナーをエディターとして追加
-      await supabase
+      await getSupabase()
         .from('board_members')
         .insert({ 
           board_id: data.id, 
@@ -129,7 +136,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   deleteBoard: async (boardId: string) => {
     set({ isLoading: true, error: null })
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('boards')
         .delete()
         .eq('id', boardId)
@@ -158,7 +165,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       // メールアドレスからユーザーIDを取得
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await getSupabase()
         .from('auth.users')
         .select('id')
         .eq('email', email)
@@ -169,7 +176,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
         return false
       }
 
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('board_members')
         .insert({ 
           board_id: boardId, 
@@ -191,7 +198,7 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
   removeMember: async (boardId: string, userId: string) => {
     set({ isLoading: true, error: null })
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('board_members')
         .delete()
         .eq('board_id', boardId)
