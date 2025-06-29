@@ -22,7 +22,7 @@ export const isMobile = () => {
 
 export const isIPhone = () => {
   if (typeof window === 'undefined') return false
-  return /iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+  return /iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
 }
 
 export const isIPad = () => {
