@@ -123,10 +123,6 @@ export default function StickyNote({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsEditing(true)
-    // Focus textarea after state update
-    setTimeout(() => {
-      textareaRef.current?.focus()
-    }, 0)
   }
 
   const handleDelete = useCallback(() => {
@@ -403,6 +399,34 @@ export default function StickyNote({
             e.stopPropagation()
             setIsEditing(true)
           }}
+          onTouchStart={(e) => {
+            // For iOS: handle touch to enter edit mode
+            if (!isEditing) {
+              e.stopPropagation()
+              const touch = e.touches[0]
+              const touchStartTime = Date.now()
+              
+              const handleTouchEnd = (endEvent: TouchEvent) => {
+                const touchEndTime = Date.now()
+                const touchDuration = touchEndTime - touchStartTime
+                
+                // Check if it's a tap (not a drag)
+                if (touchDuration < 500) {
+                  const endTouch = endEvent.changedTouches[0]
+                  const deltaX = Math.abs(touch.clientX - endTouch.clientX)
+                  const deltaY = Math.abs(touch.clientY - endTouch.clientY)
+                  
+                  if (deltaX < 10 && deltaY < 10) {
+                    setIsEditing(true)
+                  }
+                }
+                
+                document.removeEventListener('touchend', handleTouchEnd)
+              }
+              
+              document.addEventListener('touchend', handleTouchEnd)
+            }
+          }}
         >
           {isEditing ? (
             <RichTextEditor
@@ -421,7 +445,10 @@ export default function StickyNote({
                 fontSize: `${fontSize}px`,
                 lineHeight: 1.5,
                 wordBreak: 'break-word',
-                overflowWrap: 'break-word'
+                overflowWrap: 'break-word',
+                WebkitUserSelect: 'none',
+                userSelect: 'none',
+                WebkitTouchCallout: 'none'
               }}
               dangerouslySetInnerHTML={{ 
                 __html: richText || text.replace(/\n/g, '<br>') || '<span style="color: #9ca3af;">メモを入力...</span>' 

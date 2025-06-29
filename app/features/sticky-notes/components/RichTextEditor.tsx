@@ -42,16 +42,21 @@ export default function RichTextEditor({
   // Auto focus
   useEffect(() => {
     if (autoFocus && editorRef.current) {
-      editorRef.current.focus()
-      // Move cursor to end
-      const range = document.createRange()
-      const sel = window.getSelection()
-      if (sel) {
-        range.selectNodeContents(editorRef.current)
-        range.collapse(false)
-        sel.removeAllRanges()
-        sel.addRange(range)
-      }
+      // Small delay for iOS
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.focus()
+          // Move cursor to end
+          const range = document.createRange()
+          const sel = window.getSelection()
+          if (sel && editorRef.current.childNodes.length > 0) {
+            range.selectNodeContents(editorRef.current)
+            range.collapse(false)
+            sel.removeAllRanges()
+            sel.addRange(range)
+          }
+        }
+      }, 100)
     }
   }, [autoFocus])
 
@@ -120,7 +125,10 @@ export default function RichTextEditor({
         lineHeight: 1.5,
         wordBreak: 'break-word',
         overflowWrap: 'break-word',
-        minHeight: '100%'
+        minHeight: '100%',
+        WebkitUserSelect: 'text',
+        userSelect: 'text',
+        WebkitTouchCallout: 'none'
       }}
       onInput={handleInput}
       onKeyDown={handleKeyDown}
@@ -132,7 +140,17 @@ export default function RichTextEditor({
         setIsComposing(false)
         handleInput()
       }}
+      onTouchEnd={(e) => {
+        // iOS Safari fix: ensure contentEditable gets focus on touch
+        if (editorRef.current && document.activeElement !== editorRef.current) {
+          e.preventDefault()
+          editorRef.current.focus()
+        }
+      }}
       suppressContentEditableWarning={true}
+      autoCapitalize="off"
+      autoCorrect="off"
+      spellCheck={true}
     />
   )
 }
