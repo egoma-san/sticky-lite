@@ -39,11 +39,13 @@ export default function StickyFormatToolbar({
   
   // Calculate toolbar position
   const toolbarY = position === 'top' ? y - 60 : y + height + 10
-  const toolbarX = Math.max(10, Math.min(x, window.innerWidth - 380)) // Keep toolbar on screen
+  const toolbarX = Math.max(10, Math.min(x, window.innerWidth - 380)) // Ensure toolbar stays in viewport
+  
+  console.log('StickyFormatToolbar rendering at:', { x: toolbarX, y: toolbarY, position })
   
   return (
     <div
-      className="absolute z-50 p-3 rounded-xl shadow-2xl backdrop-blur-md bg-white/70 border border-white/30"
+      className="fixed z-50 p-3 rounded-xl shadow-2xl backdrop-blur-md bg-white/70 border border-white/30"
       style={{
         left: `${toolbarX}px`,
         top: `${toolbarY}px`,

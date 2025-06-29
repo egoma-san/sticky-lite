@@ -158,6 +158,7 @@ function BoardContent() {
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only deselect when clicking on empty background (not when dragging)
     if ((e.target as HTMLElement).dataset.testid === 'board-canvas' && !hasDragged) {
+      console.log('Board click - clearing selection')
       setSelectedStickyIds(new Set())
     }
   }
@@ -379,6 +380,15 @@ function BoardContent() {
     
     return () => clearTimeout(timeoutId)
   }, [scale, position])
+  
+  // Debug effect to monitor selectedStickyIds changes
+  useEffect(() => {
+    console.log('selectedStickyIds changed:', {
+      size: selectedStickyIds.size,
+      ids: Array.from(selectedStickyIds),
+      timestamp: new Date().toISOString()
+    })
+  }, [selectedStickyIds])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -454,9 +464,12 @@ function BoardContent() {
             isDeleting={deletingIds.has(sticky.id)}
             deletionType={deletionType}
             onSelect={(e?: React.MouseEvent) => {
+              console.log('StickyNote onSelect called for:', sticky.id)
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
-                setSelectedStickyIds(new Set([sticky.id]))
+                const newSelection = new Set([sticky.id])
+                console.log('Setting selectedStickyIds to:', Array.from(newSelection))
+                setSelectedStickyIds(newSelection)
               } else {
                 // Toggle selection with shift held
                 const newSelection = new Set(selectedStickyIds)
@@ -465,6 +478,7 @@ function BoardContent() {
                 } else {
                   newSelection.add(sticky.id)
                 }
+                console.log('Setting selectedStickyIds to:', Array.from(newSelection))
                 setSelectedStickyIds(newSelection)
               }
             }}
@@ -476,28 +490,63 @@ function BoardContent() {
             onFormatChange={updateStickyFormat}
             onDelete={(id) => handleDeleteWithAnimation([id], 'crumple')}
           />
-              {/* Format toolbar for this sticky */}
-              {(selectedStickyIds.has(sticky.id) || isEditing) && selectedStickyIds.size === 1 && (
-                <StickyFormatToolbar
-                  color={sticky.color as any}
-                  fontSize={sticky.fontSize || 16}
-                  isBold={sticky.isBold}
-                  isItalic={sticky.isItalic}
-                  isUnderline={sticky.isUnderline}
-                  onColorChange={(color) => updateStickyColor(sticky.id, color)}
-                  onFontSizeChange={(size) => updateStickyFontSize(sticky.id, size)}
-                  onFormatChange={(format) => updateStickyFormat(sticky.id, format)}
-                  position={sticky.y > 100 ? 'top' : 'bottom'}
-                  x={sticky.x}
-                  y={sticky.y}
-                  width={192 * (sticky.size || 1)}
-                  height={192 * (sticky.size || 1)}
-                />
-              )}
             </React.Fragment>
           )
         })}
       </div>
+      
+      {/* Debug indicator for selection state */}
+      <div className="fixed top-4 left-4 bg-black text-white p-2 rounded z-50 text-xs font-mono">
+        Selected: {selectedStickyIds.size} sticky(s)
+        {selectedStickyIds.size > 0 && (
+          <div>IDs: {Array.from(selectedStickyIds).join(', ')}</div>
+        )}
+      </div>
+      
+      {/* Format toolbar - render outside of board canvas */}
+      {(() => {
+        console.log('Checking toolbar render - selectedStickyIds.size:', selectedStickyIds.size, 'selectedIds:', Array.from(selectedStickyIds))
+        
+        if (selectedStickyIds.size === 1) {
+          const selectedId = Array.from(selectedStickyIds)[0]
+          const selectedSticky = stickies.find(s => s.id === selectedId)
+          console.log('Found selected sticky:', selectedSticky)
+          
+          if (!selectedSticky) return null
+          
+          // Calculate sticky position in screen coordinates
+          const stickySize = selectedSticky.size || 1
+          const stickyScreenX = selectedSticky.x * scale + position.x
+          const stickyScreenY = selectedSticky.y * scale + position.y
+          const stickyWidth = 192 * stickySize * scale
+          const stickyHeight = 192 * stickySize * scale
+          
+          // Position toolbar above or below the sticky note
+          const viewportHeight = window.innerHeight
+          const spaceAbove = stickyScreenY
+          const toolbarPosition = spaceAbove > 100 ? 'top' : 'bottom'
+          
+          return (
+            <StickyFormatToolbar
+              color={selectedSticky.color as StickyColor}
+              fontSize={selectedSticky.fontSize || 16}
+              isBold={selectedSticky.isBold}
+              isItalic={selectedSticky.isItalic}
+              isUnderline={selectedSticky.isUnderline}
+              onColorChange={(color) => updateStickyColor(selectedId, color)}
+              onFontSizeChange={(size) => updateStickyFontSize(selectedId, size)}
+              onFormatChange={(format) => updateStickyFormat(selectedId, format)}
+              position={toolbarPosition}
+              x={stickyScreenX}
+              y={stickyScreenY}
+              width={stickyWidth}
+              height={stickyHeight}
+            />
+          )
+        }
+        
+        return null
+      })()}
       
       {/* Selection box */}
       {selectionBox && (
