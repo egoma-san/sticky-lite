@@ -251,7 +251,7 @@ describe('Multiple Selection and Format', () => {
     
     // Check if bold button is active
     const boldButton = screen.getByTestId('bold-button')
-    expect(boldButton).toHaveClass('bg-gray-700')
+    expect(boldButton).toHaveClass('bg-gray-300')
   })
 
   test('deselecting removes blue selection ring', () => {

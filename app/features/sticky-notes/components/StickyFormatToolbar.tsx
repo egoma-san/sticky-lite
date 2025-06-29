@@ -20,7 +20,7 @@ interface StickyFormatToolbarProps {
 }
 
 // Feature flags
-const ENABLE_FONT_SIZE = true
+const ENABLE_FONT_SIZE = false
 const ENABLE_TEXT_FORMAT = true
 
 export default function StickyFormatToolbar({
@@ -117,46 +117,40 @@ export default function StickyFormatToolbar({
               <button
                 data-testid="bold-button"
                 onClick={() => onFormatChange({ isBold: !isBold })}
-                className={`p-1.5 rounded transition-all ${
+                className={`px-3 py-1.5 rounded transition-all font-bold text-sm ${
                   isBold 
-                    ? 'bg-gray-700 text-white shadow-inner' 
+                    ? 'bg-gray-300 text-gray-700 shadow-inner' 
                     : 'bg-white/50 hover:bg-white/80 text-gray-700'
                 }`}
                 title="太字 (Ctrl+B)"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6 4v12h4.5c1.5 0 2.5-1 2.5-2.5S12 11 10.5 11H8V8h2c1 0 2-1 2-2s-1-2-2-2H6zm2 2h2c.5 0 1 .5 1 1s-.5 1-1 1H8V6zm0 4h2.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5H8v-3z"/>
-                </svg>
+                B
               </button>
               
               <button
                 data-testid="italic-button"
                 onClick={() => onFormatChange({ isItalic: !isItalic })}
-                className={`p-1.5 rounded transition-all ${
+                className={`px-3 py-1.5 rounded transition-all italic text-sm ${
                   isItalic 
-                    ? 'bg-gray-700 text-white shadow-inner' 
+                    ? 'bg-gray-300 text-gray-700 shadow-inner' 
                     : 'bg-white/50 hover:bg-white/80 text-gray-700'
                 }`}
                 title="斜体 (Ctrl+I)"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 4h4l-2 12H6l2-12z"/>
-                </svg>
+                I
               </button>
               
               <button
                 data-testid="underline-button"
                 onClick={() => onFormatChange({ isUnderline: !isUnderline })}
-                className={`p-1.5 rounded transition-all ${
+                className={`px-3 py-1.5 rounded transition-all underline text-sm ${
                   isUnderline 
-                    ? 'bg-gray-700 text-white shadow-inner' 
+                    ? 'bg-gray-300 text-gray-700 shadow-inner' 
                     : 'bg-white/50 hover:bg-white/80 text-gray-700'
                 }`}
                 title="下線 (Ctrl+U)"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 4v7c0 1.7-1.3 3-3 3s-3-1.3-3-3V4h2v7c0 .6.4 1 1 1s1-.4 1-1V4h2zm4 0v7c0 1.7-1.3 3-3 3v-2c.6 0 1-.4 1-1V4h2zM4 16h12v2H4v-2z"/>
-                </svg>
+                U
               </button>
             </div>
           </>

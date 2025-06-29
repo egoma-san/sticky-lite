@@ -501,6 +501,9 @@ export default function StickyNote({
               fontSize={fontSize}
               autoFocus={true}
               className="p-3 pb-10 pr-10"
+              isBold={isBold}
+              isItalic={isItalic}
+              isUnderline={isUnderline}
             />
           ) : (
             <div
@@ -512,7 +515,10 @@ export default function StickyNote({
                 overflowWrap: 'break-word',
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
-                WebkitTouchCallout: 'none'
+                WebkitTouchCallout: 'none',
+                fontWeight: isBold ? 'bold' : 'normal',
+                fontStyle: isItalic ? 'italic' : 'normal',
+                textDecoration: isUnderline ? 'underline' : 'none'
               }}
               dangerouslySetInnerHTML={{ 
                 __html: richText || text.replace(/\n/g, '<br>') || '<span style="color: #9ca3af;">メモを入力...</span>' 

@@ -12,6 +12,9 @@ interface RichTextEditorProps {
   fontSize?: number
   autoFocus?: boolean
   className?: string
+  isBold?: boolean
+  isItalic?: boolean
+  isUnderline?: boolean
 }
 
 export default function RichTextEditor({
@@ -22,7 +25,10 @@ export default function RichTextEditor({
   onBlur,
   fontSize = 16,
   autoFocus = false,
-  className = ''
+  className = '',
+  isBold = false,
+  isItalic = false,
+  isUnderline = false
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [isComposing, setIsComposing] = useState(false)
@@ -129,7 +135,10 @@ export default function RichTextEditor({
         minHeight: '100%',
         WebkitUserSelect: 'text',
         userSelect: 'text',
-        WebkitTouchCallout: 'none'
+        WebkitTouchCallout: 'none',
+        fontWeight: isBold ? 'bold' : 'normal',
+        fontStyle: isItalic ? 'italic' : 'normal',
+        textDecoration: isUnderline ? 'underline' : 'none'
       }}
       onInput={handleInput}
       onKeyDown={handleKeyDown}
