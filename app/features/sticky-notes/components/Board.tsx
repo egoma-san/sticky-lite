@@ -25,6 +25,7 @@ function BoardContent() {
   const focusId = searchParams?.get('focus') || null
   const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyColor, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
   
+  
   // Initialize with default values to avoid hydration mismatch
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -232,6 +233,9 @@ function BoardContent() {
     const stickyElement = target.closest('[data-testid="sticky-note"]')
     const clickedOnSticky = !!stickyElement
     
+    // Check if clicking on UI elements
+    const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
+    
     // Start selection box with shift+drag anywhere (including on sticky notes)
     if (e.button === 0 && e.shiftKey) {
       e.preventDefault()
@@ -245,9 +249,6 @@ function BoardContent() {
       }
       return
     }
-    
-    // Check if clicking on board or board-canvas (not on a sticky note or UI element)
-    const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
     
     // If clicking on a selected sticky without shift, start moving all selected stickies
     if (clickedOnSticky && e.button === 0 && !e.shiftKey) {
@@ -323,20 +324,28 @@ function BoardContent() {
       
       setSelectionBox({ x, y, width, height })
       
+      // Skip selection if box is too small
+      if (width < 2 && height < 2) {
+        setSelectedStickyIds(new Set())
+        return
+      }
+      
       // Check which stickies are in the selection box
       const selectedIds = new Set<string>()
       stickies.forEach(sticky => {
         const stickySize = sticky.size || 1
         const stickyScreenX = sticky.x * scale + position.x
         const stickyScreenY = sticky.y * scale + position.y
-        const stickyWidth = 192 * stickySize * scale // 48 * 4 (w-48 in tailwind is 12rem = 192px)
+        const stickyWidth = 192 * stickySize * scale
         const stickyHeight = 192 * stickySize * scale
         
         // Check if sticky intersects with selection box
-        if (stickyScreenX + stickyWidth >= x &&
-            stickyScreenX <= x + width &&
-            stickyScreenY + stickyHeight >= y &&
-            stickyScreenY <= y + height) {
+        const intersects = !(stickyScreenX > x + width || 
+                           stickyScreenX + stickyWidth < x || 
+                           stickyScreenY > y + height || 
+                           stickyScreenY + stickyHeight < y)
+            
+        if (intersects) {
           selectedIds.add(sticky.id)
         }
       })
@@ -512,39 +521,69 @@ function BoardContent() {
       
       {/* Format toolbar - render outside of board canvas */}
       {(() => {
-        if (selectedStickyIds.size === 1) {
-          const selectedId = Array.from(selectedStickyIds)[0]
-          const selectedSticky = stickies.find(s => s.id === selectedId)
+        // Don't show toolbar while selecting
+        if (isSelecting) return null
+        
+        if (selectedStickyIds.size >= 1) {
+          const selectedIds = Array.from(selectedStickyIds)
+          const selectedStickies = stickies.filter(s => selectedIds.includes(s.id))
           
-          if (!selectedSticky) return null
+          if (selectedStickies.length === 0) return null
           
-          // Calculate sticky position in screen coordinates
-          const stickySize = selectedSticky.size || 1
-          const stickyScreenX = selectedSticky.x * scale + position.x
-          const stickyScreenY = selectedSticky.y * scale + position.y
-          const stickyWidth = 192 * stickySize * scale
-          const stickyHeight = 192 * stickySize * scale
+          // For multiple selection, use the first sticky's properties as reference
+          const firstSticky = selectedStickies[0]
           
-          // Position toolbar above or below the sticky note
+          // Calculate position for toolbar based on selection bounds
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          
+          selectedStickies.forEach(sticky => {
+            const stickySize = sticky.size || 1
+            const stickyScreenX = sticky.x * scale + position.x
+            const stickyScreenY = sticky.y * scale + position.y
+            const stickyWidth = 192 * stickySize * scale
+            const stickyHeight = 192 * stickySize * scale
+            
+            minX = Math.min(minX, stickyScreenX)
+            minY = Math.min(minY, stickyScreenY)
+            maxX = Math.max(maxX, stickyScreenX + stickyWidth)
+            maxY = Math.max(maxY, stickyScreenY + stickyHeight)
+          })
+          
+          const centerX = (minX + maxX) / 2
+          const toolbarWidth = maxX - minX
+          const toolbarHeight = maxY - minY
+          
+          // Position toolbar above or below the selection
           const viewportHeight = window.innerHeight
-          const spaceAbove = stickyScreenY
+          const spaceAbove = minY
           const toolbarPosition = spaceAbove > 100 ? 'top' : 'bottom'
+          
+          // Check if all selected stickies have the same format properties
+          const allBold = selectedStickies.every(s => s.isBold)
+          const allItalic = selectedStickies.every(s => s.isItalic)
+          const allUnderline = selectedStickies.every(s => s.isUnderline)
           
           return (
             <StickyFormatToolbar
-              color={selectedSticky.color as StickyColor}
-              fontSize={selectedSticky.fontSize || 16}
-              isBold={selectedSticky.isBold}
-              isItalic={selectedSticky.isItalic}
-              isUnderline={selectedSticky.isUnderline}
-              onColorChange={(color) => updateStickyColor(selectedId, color)}
-              onFontSizeChange={(size) => updateStickyFontSize(selectedId, size)}
-              onFormatChange={(format) => updateStickyFormat(selectedId, format)}
+              color={firstSticky.color as StickyColor}
+              fontSize={firstSticky.fontSize || 16}
+              isBold={allBold}
+              isItalic={allItalic}
+              isUnderline={allUnderline}
+              onColorChange={(color) => {
+                selectedIds.forEach(id => updateStickyColor(id, color))
+              }}
+              onFontSizeChange={(size) => {
+                selectedIds.forEach(id => updateStickyFontSize(id, size))
+              }}
+              onFormatChange={(format) => {
+                selectedIds.forEach(id => updateStickyFormat(id, format))
+              }}
               position={toolbarPosition}
-              x={stickyScreenX}
-              y={stickyScreenY}
-              width={stickyWidth}
-              height={stickyHeight}
+              x={centerX - toolbarWidth / 2}
+              y={minY}
+              width={toolbarWidth}
+              height={toolbarHeight}
             />
           )
         }

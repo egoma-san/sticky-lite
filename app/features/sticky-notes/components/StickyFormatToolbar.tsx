@@ -20,8 +20,8 @@ interface StickyFormatToolbarProps {
 }
 
 // Feature flags
-const ENABLE_FONT_SIZE = false
-const ENABLE_TEXT_FORMAT = false
+const ENABLE_FONT_SIZE = true
+const ENABLE_TEXT_FORMAT = true
 
 export default function StickyFormatToolbar({
   color,
@@ -45,10 +45,9 @@ export default function StickyFormatToolbar({
   const toolbarY = position === 'top' ? y - 60 : y + height + 10
   const toolbarX = Math.max(10, Math.min(x, window.innerWidth - 380)) // Ensure toolbar stays in viewport
   
-  console.log('StickyFormatToolbar rendering at:', { x: toolbarX, y: toolbarY, position })
-  
   return (
     <div
+      data-testid="format-toolbar"
       className="fixed z-50 p-3 rounded-xl shadow-2xl backdrop-blur-md bg-white/70 border border-white/30"
       style={{
         left: `${toolbarX}px`,
@@ -68,6 +67,7 @@ export default function StickyFormatToolbar({
             {colors.map((c) => (
               <button
                 key={c}
+                data-testid={`color-${c}`}
                 onClick={() => onColorChange(c)}
                 className={`w-6 h-6 rounded-full transition-all ${
                   color === c ? 'ring-2 ring-offset-2 ring-gray-600 scale-110' : 'hover:scale-110'
@@ -115,6 +115,7 @@ export default function StickyFormatToolbar({
             {/* Format buttons */}
             <div className="flex items-center gap-1">
               <button
+                data-testid="bold-button"
                 onClick={() => onFormatChange({ isBold: !isBold })}
                 className={`p-1.5 rounded transition-all ${
                   isBold 
@@ -129,6 +130,7 @@ export default function StickyFormatToolbar({
               </button>
               
               <button
+                data-testid="italic-button"
                 onClick={() => onFormatChange({ isItalic: !isItalic })}
                 className={`p-1.5 rounded transition-all ${
                   isItalic 
@@ -143,6 +145,7 @@ export default function StickyFormatToolbar({
               </button>
               
               <button
+                data-testid="underline-button"
                 onClick={() => onFormatChange({ isUnderline: !isUnderline })}
                 className={`p-1.5 rounded transition-all ${
                   isUnderline 

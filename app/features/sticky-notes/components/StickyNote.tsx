@@ -156,7 +156,10 @@ export default function StickyNote({
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
+    // Don't stop propagation if shift is held to allow Board to handle selection
+    if (!e.shiftKey) {
+      e.stopPropagation()
+    }
     onSelect(e)
   }
   
@@ -360,6 +363,8 @@ export default function StickyNote({
             deletionType === 'origami' ? `animate-origami-${origamiType}` :
             'animate-crumple'
           ) : ''
+        } ${
+          isSelected ? 'ring-4 ring-blue-500 ring-offset-4 rounded-lg' : ''
         }`}
         style={{
           left: `${isResizing ? localPosition.x : x}px`,
@@ -385,7 +390,7 @@ export default function StickyNote({
         color === 'purple' ? 'bg-purple-300' :
         color === 'orange' ? 'bg-orange-300' : 'bg-yellow-300'
       } ${
-        isSelected ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+        isSelected ? 'ring-4 ring-blue-500 rounded-lg' : ''
       }`}
       style={{
         boxShadow: isDragging 
