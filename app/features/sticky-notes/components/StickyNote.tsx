@@ -21,7 +21,7 @@ interface StickyNoteProps {
   isSelected: boolean
   hasMultipleSelection?: boolean
   isDeleting?: boolean
-  deletionType?: 'crumple' | 'peel'
+  deletionType?: 'crumple' | 'peel' | 'origami'
   onSelect: (e?: React.MouseEvent) => void
   onTextChange: (id: string, text: string, richText?: string) => void
   onPositionChange: (id: string, x: number, y: number) => void
@@ -64,6 +64,7 @@ export default function StickyNote({
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
   const [peelAnimationType, setPeelAnimationType] = useState<'peel-off' | 'peel-corner'>('peel-off')
+  const [origamiType, setOrigamiType] = useState<'crane' | 'plane'>('crane')
   const [localSize, setLocalSize] = useState(size)
   const [localPosition, setLocalPosition] = useState({ x, y })
   const noteRef = useRef<HTMLDivElement>(null)
@@ -203,9 +204,11 @@ export default function StickyNote({
   useEffect(() => {
     if (isDeleting) {
       setIsCrumpling(true)
-      // Randomly select peel animation type
+      // Randomly select animation type
       if (deletionType === 'peel') {
         setPeelAnimationType(Math.random() > 0.5 ? 'peel-off' : 'peel-corner')
+      } else if (deletionType === 'origami') {
+        setOrigamiType(Math.random() > 0.5 ? 'crane' : 'plane')
       }
     }
   }, [isDeleting, deletionType])
@@ -343,7 +346,11 @@ export default function StickyNote({
         } ${
           isDragging ? 'opacity-50' : ''
         } ${isSelected ? 'z-10' : ''} ${
-          isCrumpling ? (deletionType === 'peel' ? `animate-${peelAnimationType}` : 'animate-crumple') : ''
+          isCrumpling ? (
+            deletionType === 'peel' ? `animate-${peelAnimationType}` : 
+            deletionType === 'origami' ? `animate-origami-${origamiType}` :
+            'animate-crumple'
+          ) : ''
         }`}
         style={{
           left: `${isResizing ? localPosition.x : x}px`,

@@ -12,6 +12,7 @@ import ZoomControls from './ZoomControls'
 import InfoButton from './InfoButton'
 import { isModifierKeyPressed } from '../utils/platform'
 import { playPaperSound } from '../utils/deletionSounds'
+import { playOrigamiSound } from '../utils/origamiSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
 import { isSupabaseEnabled } from '@/app/lib/features'
@@ -38,7 +39,7 @@ function BoardContent() {
   const [isMovingSelection, setIsMovingSelection] = useState(false)
   const [moveStart, setMoveStart] = useState<{ x: number; y: number; positions: Map<string, { x: number; y: number }> } | null>(null)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
-  const [deletionType, setDeletionType] = useState<'crumple' | 'peel'>('crumple')
+  const [deletionType, setDeletionType] = useState<'crumple' | 'peel' | 'origami'>('origami')
   const [editingSticky, setEditingSticky] = useState<string | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
@@ -134,18 +135,22 @@ function BoardContent() {
   }, [focusId, stickies, scale])
 
   // Play sound and animate before deleting
-  const handleDeleteWithAnimation = useCallback((ids: string[], type: 'crumple' | 'peel' = 'crumple') => {
+  const handleDeleteWithAnimation = useCallback((ids: string[], type: 'crumple' | 'peel' | 'origami' = 'origami') => {
     // Set deletion type for animation
     setDeletionType(type)
     
     // Play appropriate sound
-    playPaperSound(type)
+    if (type === 'origami') {
+      playOrigamiSound(Math.random() > 0.5 ? 'crane' : 'plane')
+    } else {
+      playPaperSound(type)
+    }
     
     // Add to deleting set
     setDeletingIds(new Set(ids))
     
     // Delete after animation
-    const animationDuration = type === 'peel' ? 700 : 500 // Increased for peel-corner animation
+    const animationDuration = type === 'peel' ? 700 : type === 'origami' ? 900 : 500
     setTimeout(() => {
       if (ids.length === 1) {
         deleteSticky(ids[0])
@@ -153,7 +158,7 @@ function BoardContent() {
         deleteMultiple(ids)
       }
       setDeletingIds(new Set())
-      setDeletionType('crumple') // Reset to default
+      setDeletionType('origami') // Reset to default
     }, animationDuration)
   }, [deleteSticky, deleteMultiple])
 
@@ -486,7 +491,7 @@ function BoardContent() {
             onColorChange={updateStickyColor}
             onFontSizeChange={updateStickyFontSize}
             onFormatChange={updateStickyFormat}
-            onDelete={(id) => handleDeleteWithAnimation([id], 'crumple')}
+            onDelete={(id) => handleDeleteWithAnimation([id], 'origami')}
           />
             </React.Fragment>
           )
@@ -609,8 +614,8 @@ function BoardContent() {
       
       <TrashZone 
         onDrop={(id) => {
-          // Use peel animation for drag-to-trash
-        handleDeleteWithAnimation([id], 'peel')
+          // Use origami animation for drag-to-trash
+        handleDeleteWithAnimation([id], 'origami')
           // Remove from selection if it was selected
           const newSelection = new Set(selectedStickyIds)
           newSelection.delete(id)
@@ -619,8 +624,8 @@ function BoardContent() {
         onDeleteSelected={() => {
           if (selectedStickyIds.size > 0) {
             const idsToDelete = Array.from(selectedStickyIds)
-            // Use crumple for bulk delete
-            handleDeleteWithAnimation(idsToDelete, 'crumple')
+            // Use origami for bulk delete
+            handleDeleteWithAnimation(idsToDelete, 'origami')
             setSelectedStickyIds(new Set())
           }
         }}

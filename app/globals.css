@@ -97,6 +97,80 @@ body {
   }
 }
 
+/* Origami crane animation */
+@keyframes origami-crane {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(0.9) rotate(5deg) rotateX(20deg);
+  }
+  40% {
+    transform: scale(0.7) rotate(-5deg) rotateX(40deg) skewY(10deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(0.5) rotate(0deg) rotateX(90deg) skewY(20deg);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(0.3) rotate(10deg) rotateX(120deg) translateY(-30px) translateZ(50px);
+    opacity: 0.7;
+  }
+  80% {
+    transform: scale(0.2) rotate(30deg) rotateX(180deg) translateY(-60px) translateZ(100px) translateX(20px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.1) rotate(720deg) rotateX(360deg) translateY(-120px) translateZ(200px) translateX(40px);
+    opacity: 0;
+  }
+}
+
+/* Origami plane animation */
+@keyframes origami-plane {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  15% {
+    transform: scale(0.8) rotateY(45deg) rotateZ(-5deg);
+  }
+  30% {
+    transform: scale(0.6) rotateY(90deg) rotateZ(-10deg) skewX(20deg);
+    opacity: 0.9;
+  }
+  45% {
+    transform: scale(0.4) rotateY(135deg) rotateZ(-15deg) translateX(50px) translateY(-20px);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(0.3) rotateY(180deg) rotateZ(-20deg) translateX(100px) translateY(-40px) translateZ(50px);
+    opacity: 0.6;
+  }
+  80% {
+    transform: scale(0.2) rotateY(270deg) rotateZ(-30deg) translateX(200px) translateY(-80px) translateZ(100px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.05) rotateY(360deg) rotateZ(-45deg) translateX(300px) translateY(-120px) translateZ(150px);
+    opacity: 0;
+  }
+}
+
+.animate-origami-crane {
+  animation: origami-crane 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  transform-style: preserve-3d;
+  transform-origin: center;
+}
+
+.animate-origami-plane {
+  animation: origami-plane 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform-style: preserve-3d;
+  transform-origin: center;
+}
+
 .animate-peel-off {
   animation: peel-off 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   transform-origin: bottom left;
