@@ -9,14 +9,41 @@ import { useBoardStore } from '@/app/features/boards/store/useBoardStore'
  * It switches between local storage and Supabase based on authentication status
  */
 export function useStickies() {
-  const { isAuthenticated } = useAuthStore()
-  const { currentBoard } = useBoardStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const { currentBoard, setCurrentBoard, createBoard, fetchBoards } = useBoardStore()
   
   // Local store (for non-authenticated users)
   const localStore = useStickyStore()
   
   // Supabase store (for authenticated users)
   const supabaseStore = useSupabaseStickyStore()
+
+  // Create default board for authenticated users
+  useEffect(() => {
+    const initializeBoard = async () => {
+      if (isAuthenticated && user && !currentBoard) {
+        // Fetch user's boards
+        await fetchBoards()
+        
+        // Get the updated state
+        const boards = useBoardStore.getState().boards
+        
+        if (boards.length === 0) {
+          // Create a default board if user has none
+          const newBoard = await createBoard(`${user.email}'s Board`)
+          if (newBoard) {
+            setCurrentBoard(newBoard)
+          }
+        } else {
+          // Use the first board as current
+          setCurrentBoard(boards[0])
+        }
+      }
+    }
+    
+    initializeBoard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user])
 
   // Fetch stickies when board changes
   useEffect(() => {
@@ -29,7 +56,7 @@ export function useStickies() {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated])
+  }, [isAuthenticated, currentBoard])
 
   // Return appropriate store based on authentication
   if (isAuthenticated && currentBoard) {

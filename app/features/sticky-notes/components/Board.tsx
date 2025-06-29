@@ -13,8 +13,6 @@ import { isModifierKeyPressed } from '../utils/platform'
 import { playPaperSound } from '../utils/deletionSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
-import BoardSelector from '../../boards/components/BoardSelector'
-import BoardSharing from '../../boards/components/BoardSharing'
 
 function BoardContent() {
   const router = useRouter()
@@ -490,14 +488,6 @@ function BoardContent() {
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
       
-      {/* Top controls */}
-      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 md:top-8 md:left-8 flex items-center gap-2 z-50">
-        {/* Board selector */}
-        <BoardSelector />
-        
-        {/* Board sharing */}
-        <BoardSharing />
-      </div>
       
       {/* Top-right controls */}
       <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 flex items-center gap-2 z-50">
