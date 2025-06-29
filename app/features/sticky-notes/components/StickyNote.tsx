@@ -5,7 +5,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { StickyColor } from '../types'
 import { isModifierKeyPressed } from '../utils/platform'
 import RichTextEditor from './RichTextEditor'
-import StickyFormatToolbar from './StickyFormatToolbar'
 
 interface StickyNoteProps {
   id: string
@@ -532,24 +531,7 @@ export default function StickyNote({
       )}
     </div>
       
-      {/* Format toolbar */}
-      {(isSelected || isEditing) && !hasMultipleSelection && (
-        <StickyFormatToolbar
-          color={color}
-          fontSize={fontSize}
-          isBold={isBold}
-          isItalic={isItalic}
-          isUnderline={isUnderline}
-          onColorChange={(newColor) => onColorChange(id, newColor)}
-          onFontSizeChange={(newSize) => onFontSizeChange(id, newSize)}
-          onFormatChange={(format) => onFormatChange(id, format)}
-          position={y > 100 ? 'top' : 'bottom'}
-          x={x}
-          y={y}
-          width={192 * size}
-          height={192 * size}
-        />
-      )}
+      
     </>
   )
 }

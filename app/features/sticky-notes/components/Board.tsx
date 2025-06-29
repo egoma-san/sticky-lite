@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useStickies } from '../hooks/useStickies'
 import StickyNote from './StickyNote'
+import StickyFormatToolbar from './StickyFormatToolbar'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
@@ -37,6 +38,7 @@ function BoardContent() {
   const [moveStart, setMoveStart] = useState<{ x: number; y: number; positions: Map<string, { x: number; y: number }> } | null>(null)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [deletionType, setDeletionType] = useState<'crumple' | 'peel'>('crumple')
+  const [editingSticky, setEditingSticky] = useState<string | null>(null)
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -431,9 +433,11 @@ function BoardContent() {
           transformOrigin: '0 0',
         }}
       >
-        {stickies.map((sticky) => (
-          <StickyNote
-            key={sticky.id}
+        {stickies.map((sticky) => {
+          const isEditing = editingSticky === sticky.id
+          return (
+            <React.Fragment key={sticky.id}>
+              <StickyNote
             id={sticky.id}
             x={sticky.x}
             y={sticky.y}
@@ -472,7 +476,27 @@ function BoardContent() {
             onFormatChange={updateStickyFormat}
             onDelete={(id) => handleDeleteWithAnimation([id], 'crumple')}
           />
-        ))}
+              {/* Format toolbar for this sticky */}
+              {(selectedStickyIds.has(sticky.id) || isEditing) && selectedStickyIds.size === 1 && (
+                <StickyFormatToolbar
+                  color={sticky.color as any}
+                  fontSize={sticky.fontSize || 16}
+                  isBold={sticky.isBold}
+                  isItalic={sticky.isItalic}
+                  isUnderline={sticky.isUnderline}
+                  onColorChange={(color) => updateStickyColor(sticky.id, color)}
+                  onFontSizeChange={(size) => updateStickyFontSize(sticky.id, size)}
+                  onFormatChange={(format) => updateStickyFormat(sticky.id, format)}
+                  position={sticky.y > 100 ? 'top' : 'bottom'}
+                  x={sticky.x}
+                  y={sticky.y}
+                  width={192 * (sticky.size || 1)}
+                  height={192 * (sticky.size || 1)}
+                />
+              )}
+            </React.Fragment>
+          )
+        })}
       </div>
       
       {/* Selection box */}
