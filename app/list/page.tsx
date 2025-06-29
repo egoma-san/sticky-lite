@@ -54,6 +54,13 @@ export default function ListPage() {
         return 'bg-blue-100 text-blue-900'
       case 'pink':
         return 'bg-pink-100 text-pink-900'
+      case 'green':
+        return 'bg-green-100 text-green-900'
+      case 'purple':
+        return 'bg-purple-100 text-purple-900'
+      case 'orange':
+        return 'bg-orange-100 text-orange-900'
+      case 'yellow':
       default:
         return 'bg-yellow-100 text-yellow-900'
     }
@@ -169,7 +176,12 @@ export default function ListPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getColorClass(sticky.color)}`}>
-                        {sticky.color === 'yellow' ? '黄' : sticky.color === 'blue' ? '青' : 'ピンク'}
+                        {sticky.color === 'yellow' ? '黄' : 
+                         sticky.color === 'blue' ? '青' : 
+                         sticky.color === 'pink' ? 'ピンク' :
+                         sticky.color === 'green' ? '緑' :
+                         sticky.color === 'purple' ? '紫' :
+                         sticky.color === 'orange' ? 'オレンジ' : '黄'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
