@@ -146,7 +146,6 @@ export default function StickyNote({
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    console.log('StickyNote handleClick called for id:', id)
     e.stopPropagation()
     onSelect(e)
   }

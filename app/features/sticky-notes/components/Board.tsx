@@ -97,14 +97,6 @@ function BoardContent() {
     }
   }, [initialOffset])
 
-  // Debug selectedStickyIds changes
-  useEffect(() => {
-    console.log('selectedStickyIds changed:', { 
-      size: selectedStickyIds.size, 
-      ids: Array.from(selectedStickyIds),
-      timestamp: new Date().toISOString()
-    })
-  }, [selectedStickyIds])
 
   // Focus on specific sticky note when navigating from list view
   useEffect(() => {
@@ -474,12 +466,9 @@ function BoardContent() {
             isDeleting={deletingIds.has(sticky.id)}
             deletionType={deletionType}
             onSelect={(e?: React.MouseEvent) => {
-              console.log('StickyNote onSelect called for:', sticky.id)
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
-                const newSelection = new Set([sticky.id])
-                console.log('Setting selectedStickyIds to:', Array.from(newSelection))
-                setSelectedStickyIds(newSelection)
+                setSelectedStickyIds(new Set([sticky.id]))
               } else {
                 // Toggle selection with shift held
                 const newSelection = new Set(selectedStickyIds)
@@ -488,7 +477,6 @@ function BoardContent() {
                 } else {
                   newSelection.add(sticky.id)
                 }
-                console.log('Setting selectedStickyIds to:', Array.from(newSelection))
                 setSelectedStickyIds(newSelection)
               }
             }}
@@ -505,22 +493,12 @@ function BoardContent() {
         })}
       </div>
       
-      {/* Debug indicator for selection state */}
-      <div className="fixed top-4 left-4 bg-black text-white p-2 rounded z-50 text-xs font-mono">
-        Selected: {selectedStickyIds.size} sticky(s)
-        {selectedStickyIds.size > 0 && (
-          <div>IDs: {Array.from(selectedStickyIds).join(', ')}</div>
-        )}
-      </div>
       
       {/* Format toolbar - render outside of board canvas */}
       {(() => {
-        console.log('Checking toolbar render - selectedStickyIds.size:', selectedStickyIds.size, 'selectedIds:', Array.from(selectedStickyIds))
-        
         if (selectedStickyIds.size === 1) {
           const selectedId = Array.from(selectedStickyIds)[0]
           const selectedSticky = stickies.find(s => s.id === selectedId)
-          console.log('Found selected sticky:', selectedSticky)
           
           if (!selectedSticky) return null
           
