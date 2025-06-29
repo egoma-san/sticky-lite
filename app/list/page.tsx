@@ -4,11 +4,13 @@ import React from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStickyStore } from '../features/sticky-notes'
+import { useAuthStore } from '../features/auth/store/useAuthStore'
 
 export default function ListPage() {
   const { stickies, deleteSticky, deleteMultiple } = useStickyStore()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
   const router = useRouter()
+  const logout = useAuthStore((state) => state.logout)
 
   const handleCheck = (id: string) => {
     const newChecked = new Set(checkedItems)
@@ -67,12 +69,23 @@ export default function ListPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-800">付箋リスト</h1>
-          <Link
-            href="/"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            ボードに戻る
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              ボードに戻る
+            </Link>
+            <button
+              onClick={() => {
+                logout()
+                router.push('/login')
+              }}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
 
         {/* Action buttons */}

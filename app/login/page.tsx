@@ -2,21 +2,30 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '../features/auth/store/useAuthStore'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
+  const login = useAuthStore((state) => state.login)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
     
-    // Simulate login process
+    // Simulate async login process
     setTimeout(() => {
+      const success = login(email, password)
+      if (success) {
+        router.push('/')
+      } else {
+        setError('メールアドレスまたはパスワードが正しくありません')
+      }
       setIsLoading(false)
-      router.push('/')
     }, 1000)
   }
 
@@ -35,6 +44,20 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-center text-gray-800">
             ログイン
           </h2>
+
+          {/* 認証情報のヒント */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm">
+            <p className="text-blue-800 font-medium mb-1">テスト用認証情報：</p>
+            <p className="text-blue-700">メール: user@example.com</p>
+            <p className="text-blue-700">パスワード: password123</p>
+          </div>
+
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
