@@ -370,7 +370,7 @@ export default function StickyNote({
           transition: isResizing ? '' : 'width 0.2s ease-out, height 0.2s ease-out, left 0.2s ease-out, top 0.2s ease-out',
           zIndex: zIndex,
         }}
-        draggable
+        draggable={!isResizing}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onClick={handleClick}

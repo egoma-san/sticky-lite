@@ -174,7 +174,6 @@ function BoardContent() {
   const handleBoardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only deselect when clicking on empty background (not when dragging)
     if ((e.target as HTMLElement).dataset.testid === 'board-canvas' && !hasDragged) {
-      console.log('Board click - clearing selection')
       setSelectedStickyIds(new Set())
     }
   }
@@ -228,8 +227,13 @@ function BoardContent() {
     setMouseDownPos({ x: e.clientX, y: e.clientY })
     setHasDragged(false)
     
-    // Start selection box with shift+drag anywhere
-    if (e.button === 0 && e.shiftKey) {
+    // Check if clicking on a sticky note
+    const target = e.target as HTMLElement
+    const stickyElement = target.closest('[data-testid="sticky-note"]')
+    const clickedOnSticky = !!stickyElement
+    
+    // Start selection box with shift+drag only on empty space, not on sticky notes
+    if (e.button === 0 && e.shiftKey && !clickedOnSticky) {
       e.preventDefault()
       const rect = boardRef.current?.getBoundingClientRect()
       if (rect) {
@@ -243,10 +247,13 @@ function BoardContent() {
     }
     
     // Check if clicking on board or board-canvas (not on a sticky note or UI element)
-    const target = e.target as HTMLElement
-    const stickyElement = target.closest('[data-testid="sticky-note"]')
-    const clickedOnSticky = !!stickyElement
     const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
+    
+    // If clicking on a sticky with shift, let the sticky handle multi-selection
+    if (clickedOnSticky && e.button === 0 && e.shiftKey) {
+      // Just return here to let the sticky's onClick handle it
+      return
+    }
     
     // If clicking on a selected sticky without shift, start moving all selected stickies
     if (clickedOnSticky && e.button === 0 && !e.shiftKey) {
@@ -400,14 +407,6 @@ function BoardContent() {
     return () => clearTimeout(timeoutId)
   }, [scale, position])
   
-  // Debug effect to monitor selectedStickyIds changes
-  useEffect(() => {
-    console.log('selectedStickyIds changed:', {
-      size: selectedStickyIds.size,
-      ids: Array.from(selectedStickyIds),
-      timestamp: new Date().toISOString()
-    })
-  }, [selectedStickyIds])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -484,11 +483,10 @@ function BoardContent() {
             deletionType={deletionType}
             zIndex={stickyZIndices.get(sticky.id) || 0}
             onSelect={(e?: React.MouseEvent) => {
-              // Bring to front when selected
-              bringToFront(sticky.id)
-              
               // If shift is not held, clear other selections
               if (!e || !e.shiftKey) {
+                // Bring to front when selected (single selection)
+                bringToFront(sticky.id)
                 setSelectedStickyIds(new Set([sticky.id]))
               } else {
                 // Toggle selection with shift held
@@ -497,6 +495,8 @@ function BoardContent() {
                   newSelection.delete(sticky.id)
                 } else {
                   newSelection.add(sticky.id)
+                  // Only bring to front when adding to selection, not removing
+                  bringToFront(sticky.id)
                 }
                 setSelectedStickyIds(newSelection)
               }
