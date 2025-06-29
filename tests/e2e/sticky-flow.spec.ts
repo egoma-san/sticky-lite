@@ -2,7 +2,16 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Sticky Note Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
+    // First, login
+    await page.goto('/login')
+    
+    // Fill in login credentials
+    await page.fill('input[type="email"]', 'user@example.com')
+    await page.fill('input[type="password"]', 'password123')
+    await page.click('button[type="submit"]')
+    
+    // Wait for navigation to board
+    await page.waitForURL('/')
   })
 
   test('should create, edit, move and delete sticky note', async ({ page }) => {

@@ -15,6 +15,13 @@ jest.mock('next/navigation', () => ({
   }),
 }))
 
+// Mock the auth store
+jest.mock('../../app/features/auth/store/useAuthStore', () => ({
+  useAuthStore: jest.fn(() => ({
+    logout: jest.fn()
+  }))
+}))
+
 describe('ListPage', () => {
   const mockDeleteMultiple = jest.fn()
   const mockStickies = [

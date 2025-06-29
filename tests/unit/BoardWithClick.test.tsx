@@ -5,6 +5,23 @@ import { useStickyStore } from '@/app/features/sticky-notes/store/useStickyStore
 // Mock the store
 jest.mock('@/app/features/sticky-notes/store/useStickyStore')
 
+// Mock the auth store
+jest.mock('@/app/features/auth/store/useAuthStore', () => ({
+  useAuthStore: jest.fn(() => ({
+    logout: jest.fn()
+  }))
+}))
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+  useSearchParams: () => ({
+    get: jest.fn()
+  })
+}))
+
 describe('Board - Click to Create', () => {
   const mockAddSticky = jest.fn()
   const mockUpdateStickyText = jest.fn()
