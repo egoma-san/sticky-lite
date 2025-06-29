@@ -232,8 +232,8 @@ function BoardContent() {
     const stickyElement = target.closest('[data-testid="sticky-note"]')
     const clickedOnSticky = !!stickyElement
     
-    // Start selection box with shift+drag only on empty space, not on sticky notes
-    if (e.button === 0 && e.shiftKey && !clickedOnSticky) {
+    // Start selection box with shift+drag anywhere (including on sticky notes)
+    if (e.button === 0 && e.shiftKey) {
       e.preventDefault()
       const rect = boardRef.current?.getBoundingClientRect()
       if (rect) {
@@ -248,12 +248,6 @@ function BoardContent() {
     
     // Check if clicking on board or board-canvas (not on a sticky note or UI element)
     const clickedOnUI = !!target.closest('[data-testid="trash-zone"]') || !!target.closest('button')
-    
-    // If clicking on a sticky with shift, let the sticky handle multi-selection
-    if (clickedOnSticky && e.button === 0 && e.shiftKey) {
-      // Just return here to let the sticky's onClick handle it
-      return
-    }
     
     // If clicking on a selected sticky without shift, start moving all selected stickies
     if (clickedOnSticky && e.button === 0 && !e.shiftKey) {
@@ -561,7 +555,7 @@ function BoardContent() {
       {/* Selection box */}
       {selectionBox && (
         <div
-          className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-10 pointer-events-none"
+          className="absolute border-2 border-blue-500 bg-blue-500 bg-opacity-20 pointer-events-none rounded-lg"
           style={{
             left: `${selectionBox.x}px`,
             top: `${selectionBox.y}px`,
