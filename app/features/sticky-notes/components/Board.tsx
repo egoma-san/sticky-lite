@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useStickies } from '../hooks/useStickies'
+import { useStickiesWithUndo } from '../hooks/useStickiesWithUndo'
 import StickyNote from './StickyNote'
 import StickyFormatToolbar from './StickyFormatToolbar'
 import TrashZone from './TrashZone'
@@ -17,13 +17,15 @@ import { useAuthStore } from '../../auth/store/useAuthStore'
 import { useRouter } from 'next/navigation'
 import { isSupabaseEnabled } from '@/app/lib/features'
 import { StickyColor } from '../types'
+import { useUndoStore } from '../store/useUndoStore'
 
 function BoardContent() {
   const router = useRouter()
   const { logout, isAuthenticated, user } = useAuthStore()
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
-  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyColor, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple } = useStickies()
+  const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyColor, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple, restoreState } = useStickiesWithUndo()
+  const { addToHistory, undo, redo, isUndoAvailable, isRedoAvailable } = useUndoStore()
   
   
   // Initialize with default values to avoid hydration mismatch
@@ -106,6 +108,11 @@ function BoardContent() {
       const centerX = window.innerWidth / 2 - initialOffset
       const centerY = window.innerHeight / 2 - initialOffset
       setPosition({ x: centerX, y: centerY })
+    }
+    
+    // Initialize undo history with current state
+    if (stickies.length > 0) {
+      addToHistory(stickies, 'Initial state')
     }
   }, [initialOffset])
 
@@ -418,6 +425,33 @@ function BoardContent() {
         e.preventDefault()
       }
       
+      // Handle undo/redo shortcuts
+      if (isModifierKeyPressed(e)) {
+        // Cmd/Ctrl + Z for undo
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault()
+          if (isUndoAvailable) {
+            const previousState = undo()
+            if (previousState) {
+              restoreState(previousState)
+            }
+          }
+          return
+        }
+        
+        // Cmd/Ctrl + Shift + Z or Cmd/Ctrl + Y for redo
+        if ((e.key === 'z' && e.shiftKey) || e.key === 'y') {
+          e.preventDefault()
+          if (isRedoAvailable) {
+            const nextState = redo()
+            if (nextState) {
+              restoreState(nextState)
+            }
+          }
+          return
+        }
+      }
+      
       // Handle formatting shortcuts when sticky notes are selected (not in editing mode)
       if (selectedStickyIds.size > 0 && isModifierKeyPressed(e) && !editingSticky) {
         // Don't format if the user is typing in a textarea or input or contenteditable
@@ -463,10 +497,14 @@ function BoardContent() {
       }
       
       // Handle delete/backspace for multiple selected notes
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0) {
-        // Don't delete if the user is typing in a textarea or input
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0 && !editingSticky) {
+        // Don't delete if the user is typing in a textarea or input or contenteditable
         const activeElement = document.activeElement
-        if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+        if (activeElement && (
+          activeElement.tagName === 'TEXTAREA' || 
+          activeElement.tagName === 'INPUT' ||
+          activeElement.getAttribute('contenteditable') === 'true'
+        )) {
           return
         }
         e.preventDefault()
@@ -480,7 +518,7 @@ function BoardContent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedStickyIds, handleDeleteWithAnimation, stickies, updateStickyFormat, editingSticky])
+  }, [selectedStickyIds, handleDeleteWithAnimation, stickies, updateStickyFormat, editingSticky, isUndoAvailable, isRedoAvailable, undo, redo, restoreState])
 
   return (
     <div 
