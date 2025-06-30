@@ -34,6 +34,7 @@ interface StickyNoteProps {
   onDragStart?: () => void
   onEditingChange?: (isEditing: boolean) => void
   onEditorRef?: (ref: HTMLDivElement | null) => void
+  onContextMenu?: (e: React.MouseEvent | React.TouchEvent, stickyId: string) => void
 }
 
 export default function StickyNote({
@@ -64,6 +65,7 @@ export default function StickyNote({
   onDragStart,
   onEditingChange,
   onEditorRef,
+  onContextMenu,
 }: StickyNoteProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -77,6 +79,10 @@ export default function StickyNote({
   const [localPosition, setLocalPosition] = useState({ x, y })
   const noteRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [touchStartTime, setTouchStartTime] = useState(0)
+  const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 })
+  const [hasTouchMoved, setHasTouchMoved] = useState(false)
   
   // Sync props with local state when not resizing
   useEffect(() => {
@@ -166,6 +172,66 @@ export default function StickyNote({
     }
     onSelect(e)
   }
+  
+  // Handle touch events for long press context menu
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    setTouchStartTime(Date.now())
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setHasTouchMoved(false)
+    
+    // Start long press timer
+    longPressTimerRef.current = setTimeout(() => {
+      if (!hasTouchMoved && onContextMenu) {
+        e.preventDefault()
+        // Trigger haptic feedback if available
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50)
+        }
+        onContextMenu(e, id)
+      }
+    }, 500) // 500ms for long press
+  }
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    const moveDistance = Math.sqrt(
+      Math.pow(touch.clientX - touchStartPos.x, 2) + 
+      Math.pow(touch.clientY - touchStartPos.y, 2)
+    )
+    
+    // If moved more than 10 pixels, cancel long press
+    if (moveDistance > 10) {
+      setHasTouchMoved(true)
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+        longPressTimerRef.current = null
+      }
+    }
+  }
+  
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    // Clear long press timer
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+    
+    // Handle tap if it was a quick touch without movement
+    const touchDuration = Date.now() - touchStartTime
+    if (touchDuration < 500 && !hasTouchMoved) {
+      handleClick(e as any)
+    }
+  }
+  
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+      }
+    }
+  }, [])
   
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -389,6 +455,15 @@ export default function StickyNote({
         onDragEnd={handleDragEnd}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          if (onContextMenu) {
+            onContextMenu(e, id)
+          }
+        }}
       >
       {/* Main sticky note body */}
       <div className={`relative w-full h-full overflow-hidden ${

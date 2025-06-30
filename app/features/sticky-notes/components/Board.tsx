@@ -6,11 +6,12 @@ import { useSearchParams } from 'next/navigation'
 import { useStickiesWithUndo } from '../hooks/useStickiesWithUndo'
 import StickyNote from './StickyNote'
 import StickyFormatToolbar from './StickyFormatToolbar'
+import StickyContextMenu from './StickyContextMenu'
 import TrashZone from './TrashZone'
 import AddStickyButton from './AddStickyButton'
 import ZoomControls from './ZoomControls'
 import InfoButton from './InfoButton'
-import { isModifierKeyPressed } from '../utils/platform'
+import { isModifierKeyPressed, isMobile } from '../utils/platform'
 import { playPaperSound } from '../utils/deletionSounds'
 import { playOrigamiSound } from '../utils/origamiSounds'
 import { useAuthStore } from '../../auth/store/useAuthStore'
@@ -48,6 +49,8 @@ function BoardContent() {
   const [activeEditor, setActiveEditor] = useState<HTMLDivElement | null>(null)
   const [stickyZIndices, setStickyZIndices] = useState<Map<string, number>>(new Map())
   const [highestZIndex, setHighestZIndex] = useState(0)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; stickyId: string } | null>(null)
+  const [isMobileDevice, setIsMobileDevice] = useState(false)
   const boardRef = useRef<HTMLDivElement>(null)
   const canvasSize = 10000 // Large canvas for open world
   const initialOffset = canvasSize / 2 // Center the view
@@ -84,6 +87,19 @@ function BoardContent() {
       y: Math.min(Math.max(pos.y, minY), maxY)
     }
   }
+  
+  // Check if mobile device
+  useEffect(() => {
+    setIsMobileDevice(isMobile())
+    
+    // Re-check on resize
+    const handleResize = () => {
+      setIsMobileDevice(isMobile())
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
   
   // Load saved view state after mount
   useEffect(() => {
@@ -598,6 +614,20 @@ function BoardContent() {
             onDragStart={() => bringToFront(sticky.id)}
             onEditingChange={(isEditing) => setEditingSticky(isEditing ? sticky.id : null)}
             onEditorRef={(ref) => setActiveEditor(ref)}
+            onContextMenu={(e, stickyId) => {
+              if (isMobileDevice) {
+                const rect = boardRef.current?.getBoundingClientRect()
+                if (rect) {
+                  const x = 'clientX' in e ? e.clientX : (e as React.TouchEvent).touches[0].clientX
+                  const y = 'clientY' in e ? e.clientY : (e as React.TouchEvent).touches[0].clientY
+                  setContextMenu({ x, y, stickyId })
+                  // Select the sticky if not already selected
+                  if (!selectedStickyIds.has(stickyId)) {
+                    setSelectedStickyIds(new Set([stickyId]))
+                  }
+                }
+              }
+            }}
           />
             </React.Fragment>
           )
@@ -605,10 +635,34 @@ function BoardContent() {
       </div>
       
       
-      {/* Format toolbar - render outside of board canvas */}
+      {/* Context menu for mobile */}
+      {contextMenu && isMobileDevice && (() => {
+        const sticky = stickies.find(s => s.id === contextMenu.stickyId)
+        if (!sticky) return null
+        
+        return (
+          <StickyContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            color={sticky.color as StickyColor}
+            isBold={sticky.isBold}
+            isItalic={sticky.isItalic}
+            isUnderline={sticky.isUnderline}
+            onColorChange={(color) => updateStickyColor(contextMenu.stickyId, color)}
+            onFormatChange={(format) => updateStickyFormat(contextMenu.stickyId, format)}
+            onDelete={() => {
+              handleDeleteWithAnimation([contextMenu.stickyId], 'origami')
+              setSelectedStickyIds(new Set())
+            }}
+            onClose={() => setContextMenu(null)}
+          />
+        )
+      })()}
+      
+      {/* Format toolbar - render outside of board canvas (desktop only) */}
       {(() => {
-        // Don't show toolbar while selecting
-        if (isSelecting) return null
+        // Don't show toolbar while selecting or on mobile
+        if (isSelecting || isMobileDevice) return null
         
         if (selectedStickyIds.size >= 1) {
           const selectedIds = Array.from(selectedStickyIds)
