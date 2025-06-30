@@ -514,16 +514,23 @@ function BoardContent() {
       }
       
       // Handle delete/backspace for multiple selected notes
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0 && !editingSticky) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0) {
         // Don't delete if the user is typing in a textarea or input or contenteditable
         const activeElement = document.activeElement
         if (activeElement && (
           activeElement.tagName === 'TEXTAREA' || 
           activeElement.tagName === 'INPUT' ||
-          activeElement.getAttribute('contenteditable') === 'true'
+          activeElement.getAttribute('contenteditable') === 'true' ||
+          activeElement.closest('[contenteditable="true"]') // Also check parent elements
         )) {
           return
         }
+        
+        // Also check if we're in editing mode for any sticky
+        if (editingSticky) {
+          return
+        }
+        
         e.preventDefault()
         
         // Delete all selected sticky notes with animation
