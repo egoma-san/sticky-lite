@@ -45,15 +45,15 @@ export default function TrashZone({ onDrop, onDeleteSelected }: TrashZoneProps) 
   return (
     <button
       data-testid="trash-zone"
-      className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 w-16 h-16 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center transition-all duration-200 relative overflow-hidden z-50 ${
+      className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center transition-all duration-200 relative overflow-hidden z-50 touch-manipulation ${
         isDragOver 
           ? 'scale-110' 
-          : 'hover:scale-105'
+          : 'hover:scale-105 active:scale-95'
       }`}
       style={{
         position: 'fixed',
-        bottom: '1rem',
-        right: '1rem',
+        bottom: '1.5rem',
+        right: '1.5rem',
         background: isDragOver 
           ? 'linear-gradient(135deg, rgba(255, 69, 58, 0.9) 0%, rgba(255, 59, 48, 0.7) 100%)' 
           : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%)',
@@ -70,7 +70,7 @@ export default function TrashZone({ onDrop, onDeleteSelected }: TrashZoneProps) 
     >
       <div className="relative z-10">
         <svg
-          className="w-8 h-8 sm:w-10 sm:h-10"
+          className="w-10 h-10 sm:w-12 sm:h-12"
           fill="none"
           viewBox="0 0 24 24"
           style={{
