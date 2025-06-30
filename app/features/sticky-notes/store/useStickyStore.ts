@@ -67,7 +67,9 @@ export const useStickyStore = create<StickyStore>()(
         stickies: state.stickies.filter(sticky => !ids.includes(sticky.id))
       })),
       
-      clearAll: () => set({ stickies: [] })
+      clearAll: () => set({ stickies: [] }),
+      
+      restoreState: (stickies) => set({ stickies })
     }),
     {
       name: 'sticky-storage',

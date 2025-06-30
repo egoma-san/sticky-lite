@@ -29,4 +29,5 @@ export interface StickyStore {
   deleteSticky: (id: string) => void
   deleteMultiple: (ids: string[]) => void
   clearAll: () => void
+  restoreState: (stickies: Sticky[]) => void
 }

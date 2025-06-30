@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useStickies } from './useStickies'
 import { useUndoStore } from '../store/useUndoStore'
 import { useStickyStore } from '../store/useStickyStore'
-import { StickyColor } from '../types'
+import { StickyColor, Sticky } from '../types'
 
 /**
  * Wrapper hook that adds undo/redo functionality to sticky operations
@@ -65,10 +65,10 @@ export function useStickiesWithUndo() {
   }, [stickiesHook, saveStateBeforeChange])
   
   // Function to restore state from undo/redo
-  const restoreState = useCallback((stickies: any[]) => {
+  const restoreState = useCallback((stickies: Sticky[]) => {
     // For local storage mode, directly update the store
     if (!stickiesHook.isLoading) {
-      localStore.setState({ stickies })
+      localStore.restoreState(stickies)
     }
     // For Supabase mode, we would need to sync with the server
     // This is more complex and would require batch updates

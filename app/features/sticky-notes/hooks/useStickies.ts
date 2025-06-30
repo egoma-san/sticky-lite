@@ -134,15 +134,8 @@ export function useStickies() {
 
   // Return appropriate store based on authentication
   if (isAuthenticated && currentBoard) {
-    // Transform Supabase stickies to match local store format
-    const transformedStickies = supabaseStore.stickies.map(sticky => ({
-      ...sticky,
-      richText: (sticky as any).rich_text,
-      fontSize: (sticky as any).font_size,
-      isBold: (sticky as any).is_bold,
-      isItalic: (sticky as any).is_italic,
-      isUnderline: (sticky as any).is_underline,
-    }))
+    // Supabase stickies are already in the correct format after transformation in useSupabaseStickyStore
+    const transformedStickies = supabaseStore.stickies
     
     return {
       stickies: transformedStickies,
@@ -166,7 +159,8 @@ export function useStickies() {
       deleteSticky: supabaseStore.deleteSticky,
       deleteMultiple: supabaseStore.deleteMultiple,
       clearAll: supabaseStore.clearAll,
-      clearError: supabaseStore.clearError
+      clearError: supabaseStore.clearError,
+      restoreState: supabaseStore.restoreState
     }
   }
 
@@ -217,6 +211,7 @@ export function useStickies() {
       localStore.clearAll()
       return Promise.resolve()
     },
-    clearError: () => {}
+    clearError: () => {},
+    restoreState: localStore.restoreState
   }
 }

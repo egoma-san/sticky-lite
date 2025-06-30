@@ -11,7 +11,21 @@ type StickyUpdate = Database['public']['Tables']['stickies']['Update']
 
 export type StickyColor = 'yellow' | 'blue' | 'pink' | 'green' | 'purple' | 'orange'
 
-export interface Sticky extends Omit<StickyDB, 'created_at' | 'updated_at'> {
+// Transform database row to camelCase Sticky type
+export interface Sticky {
+  id: string
+  user_id: string
+  board_id: string
+  x: number
+  y: number
+  text: string
+  richText?: string
+  color: StickyColor
+  size: number
+  fontSize: number
+  isBold: boolean
+  isItalic: boolean
+  isUnderline: boolean
   createdAt: Date
   updatedAt?: Date
 }
@@ -40,6 +54,7 @@ interface StickyStore {
   unsubscribeFromBoard: () => void
   clearError: () => void
   setError: (error: string) => void
+  restoreState: (stickies: Sticky[]) => void
 }
 
 let supabase: ReturnType<typeof createClient> | null = null
@@ -77,10 +92,22 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
       if (error) throw error
 
-      const stickies: Sticky[] = (data || []).map((sticky: any) => ({
-        ...sticky,
-        createdAt: new Date(sticky.created_at),
-        updatedAt: sticky.updated_at ? new Date(sticky.updated_at) : undefined
+      const stickies: Sticky[] = (data || []).map((row: StickyDB) => ({
+        id: row.id,
+        user_id: row.user_id,
+        board_id: row.board_id,
+        x: row.x,
+        y: row.y,
+        text: row.text || '',  // Handle null text
+        richText: row.rich_text || undefined,
+        color: row.color as StickyColor,
+        size: row.size,
+        fontSize: row.font_size,
+        isBold: row.is_bold,
+        isItalic: row.is_italic,
+        isUnderline: row.is_underline,
+        createdAt: new Date(row.created_at),
+        updatedAt: row.updated_at ? new Date(row.updated_at) : undefined
       }))
 
       set({ stickies, isLoading: false })
@@ -339,20 +366,46 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
           const { eventType, new: newRecord, old: oldRecord } = payload
 
           if (eventType === 'INSERT' && newRecord) {
+            const row = newRecord as StickyDB
             const sticky: Sticky = {
-              ...newRecord as StickyDB,
-              createdAt: new Date(newRecord.created_at),
-              updatedAt: newRecord.updated_at ? new Date(newRecord.updated_at) : undefined
+              id: row.id,
+              user_id: row.user_id,
+              board_id: row.board_id,
+              x: row.x,
+              y: row.y,
+              text: row.text || '',
+              richText: row.rich_text || undefined,
+              color: row.color as StickyColor,
+              size: row.size,
+              fontSize: row.font_size,
+              isBold: row.is_bold,
+              isItalic: row.is_italic,
+              isUnderline: row.is_underline,
+              createdAt: new Date(row.created_at),
+              updatedAt: row.updated_at ? new Date(row.updated_at) : undefined
             }
             set((state) => ({
               stickies: [...state.stickies, sticky]
             }))
           } else if (eventType === 'UPDATE' && newRecord) {
+            const row = newRecord as StickyDB
             set((state) => ({
               stickies: state.stickies.map(sticky =>
-                sticky.id === newRecord.id
+                sticky.id === row.id
                   ? {
-                      ...newRecord as StickyDB,
+                      id: row.id,
+                      user_id: row.user_id,
+                      board_id: row.board_id,
+                      x: row.x,
+                      y: row.y,
+                      text: row.text || '',
+                      richText: row.rich_text || undefined,
+                      color: row.color as StickyColor,
+                      size: row.size,
+                      fontSize: row.font_size,
+                      isBold: row.is_bold,
+                      isItalic: row.is_italic,
+                      isUnderline: row.is_underline,
                       createdAt: sticky.createdAt,
                       updatedAt: new Date()
                     }
@@ -381,5 +434,7 @@ export const useSupabaseStickyStore = create<StickyStore>()((set, get) => ({
 
   clearError: () => set({ error: null }),
   
-  setError: (error: string) => set({ error })
+  setError: (error: string) => set({ error }),
+  
+  restoreState: (stickies: Sticky[]) => set({ stickies })
 }))

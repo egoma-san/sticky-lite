@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import { isSupabaseEnabled } from '@/app/lib/features'
 import { StickyColor } from '../types'
 import { useUndoStore } from '../store/useUndoStore'
+import SnapshotButton from '../../snapshots/components/SnapshotButton'
 
 function BoardContent() {
   const router = useRouter()
@@ -709,6 +710,8 @@ function BoardContent() {
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
       
+      {/* Snapshot button */}
+      <SnapshotButton />
       
       {/* Top-right controls */}
       <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 flex items-center gap-2 z-50">
