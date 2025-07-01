@@ -35,6 +35,7 @@ interface StickyNoteProps {
   onEditingChange?: (isEditing: boolean) => void
   onEditorRef?: (ref: HTMLDivElement | null) => void
   onContextMenu?: (e: React.MouseEvent | React.TouchEvent, stickyId: string) => void
+  allowTextSelection?: boolean
 }
 
 export default function StickyNote({
@@ -613,8 +614,8 @@ export default function StickyNote({
                 lineHeight: 1.5,
                 wordBreak: 'break-word',
                 overflowWrap: 'break-word',
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
+                WebkitUserSelect: isSelected ? 'text' : 'none',
+                userSelect: isSelected ? 'text' : 'none',
                 WebkitTouchCallout: 'none'
               }}
               dangerouslySetInnerHTML={{ 

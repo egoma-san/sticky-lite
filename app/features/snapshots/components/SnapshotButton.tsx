@@ -10,7 +10,7 @@ export default function SnapshotButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-4 left-4 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow z-50 group"
+        className="fixed bottom-24 left-4 sm:bottom-28 sm:left-6 md:bottom-32 md:left-8 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow z-50 group"
         title="スナップショット"
       >
         <svg 

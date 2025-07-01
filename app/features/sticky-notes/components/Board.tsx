@@ -771,60 +771,87 @@ function BoardContent() {
                   // Trigger input event to save changes
                   activeEditor.dispatchEvent(new Event('input', { bubbles: true }))
                 } else {
-                  // In selection mode, check if there's text selected within sticky notes
+                  // In selection mode, apply format to selected text
                   const selection = window.getSelection()
-                  const hasTextSelection = selection && selection.toString().trim().length > 0
-                  
-                  if (hasTextSelection && selection.rangeCount > 0) {
-                    // Apply format to selected text range
+                  if (selection && selection.toString().trim().length > 0 && selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0)
                     
+                    // Find which sticky note contains the selection
                     selectedIds.forEach(id => {
                       const stickyElement = document.getElementById(id)
-                      if (stickyElement && stickyElement.contains(range.commonAncestorContainer)) {
-                        // Create a temporary contenteditable to apply formatting
+                      const textContainer = stickyElement?.querySelector('div[style*="fontSize"]') as HTMLElement
+                      
+                      if (textContainer && textContainer.contains(range.commonAncestorContainer)) {
                         const sticky = stickies.find(s => s.id === id)
                         if (!sticky) return
                         
-                        // Enter temporary edit mode to apply format
-                        const textContainer = stickyElement.querySelector('[contenteditable], [dangerouslySetInnerHTML]') as HTMLElement
-                        if (textContainer) {
-                          // Make it temporarily editable
-                          const wasEditable = textContainer.contentEditable === 'true'
-                          if (!wasEditable) {
-                            textContainer.contentEditable = 'true'
-                            textContainer.innerHTML = sticky.richText || sticky.text.replace(/\n/g, '<br>')
-                          }
-                          
-                          // Restore selection and apply format
-                          selection.removeAllRanges()
-                          selection.addRange(range)
-                          
-                          if (format.isBold !== undefined) {
-                            document.execCommand('bold', false)
-                          }
-                          if (format.isItalic !== undefined) {
-                            document.execCommand('italic', false)
-                          }
-                          if (format.isUnderline !== undefined) {
-                            document.execCommand('underline', false)
-                          }
-                          
-                          // Save the changes
-                          const newRichText = textContainer.innerHTML
-                          const newText = textContainer.textContent || ''
-                          updateStickyText(id, newText, newRichText)
-                          
-                          // Restore non-editable state if needed
-                          if (!wasEditable) {
-                            textContainer.contentEditable = 'false'
+                        // Create a temporary contenteditable element
+                        const tempEditor = document.createElement('div')
+                        tempEditor.contentEditable = 'true'
+                        tempEditor.innerHTML = sticky.richText || sticky.text.replace(/\n/g, '<br>')
+                        tempEditor.style.position = 'absolute'
+                        tempEditor.style.left = '-9999px'
+                        document.body.appendChild(tempEditor)
+                        
+                        // Find and select the matching text in temp editor
+                        const selectedText = selection.toString()
+                        const textWalker = document.createTreeWalker(
+                          tempEditor,
+                          NodeFilter.SHOW_TEXT,
+                          null
+                        )
+                        
+                        let found = false
+                        let textNode
+                        while (textNode = textWalker.nextNode()) {
+                          const nodeText = textNode.textContent || ''
+                          const index = nodeText.indexOf(selectedText)
+                          if (index !== -1) {
+                            // Create range in temp editor
+                            const tempRange = document.createRange()
+                            tempRange.setStart(textNode, index)
+                            tempRange.setEnd(textNode, index + selectedText.length)
+                            
+                            // Select the range
+                            const tempSelection = window.getSelection()
+                            tempSelection?.removeAllRanges()
+                            tempSelection?.addRange(tempRange)
+                            
+                            // Apply formatting
+                            tempEditor.focus()
+                            if (format.isBold !== undefined) {
+                              document.execCommand('bold', false)
+                            }
+                            if (format.isItalic !== undefined) {
+                              document.execCommand('italic', false)
+                            }
+                            if (format.isUnderline !== undefined) {
+                              document.execCommand('underline', false)
+                            }
+                            
+                            found = true
+                            break
                           }
                         }
+                        
+                        // Get the formatted HTML and clean up
+                        const newRichText = tempEditor.innerHTML
+                        const newText = tempEditor.textContent || ''
+                        document.body.removeChild(tempEditor)
+                        
+                        // Update the sticky note
+                        if (found) {
+                          updateStickyText(id, newText, newRichText)
+                        }
+                        
+                        // Restore original selection
+                        selection.removeAllRanges()
+                        selection.addRange(range)
                       }
                     })
                   } else {
-                    // No selection, apply format to whole notes
-                    selectedIds.forEach(id => updateStickyFormat(id, format))
+                    // No text selected - do nothing
+                    console.log('Please select text to apply formatting')
                   }
                 }
               }}
