@@ -23,7 +23,7 @@ interface StickyFormatToolbarProps {
 
 // Feature flags
 const ENABLE_FONT_SIZE = false
-const ENABLE_TEXT_FORMAT = true
+const ENABLE_TEXT_FORMAT = false
 
 export default function StickyFormatToolbar({
   color,

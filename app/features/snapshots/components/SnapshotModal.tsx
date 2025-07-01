@@ -6,6 +6,7 @@ import { useStickies } from '@/app/features/sticky-notes/hooks/useStickies'
 import { useStickyStore } from '@/app/features/sticky-notes/store/useStickyStore'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
+import LoadSnapshotDialog from './LoadSnapshotDialog'
 
 interface SnapshotModalProps {
   onClose: () => void
@@ -18,6 +19,13 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [loadDialogState, setLoadDialogState] = useState<{
+    isOpen: boolean
+    snapshotId: string
+    snapshotName: string
+    snapshotStickiesCount: number
+  } | null>(null)
   
   const handleSave = async () => {
     if (!name.trim()) return
@@ -35,48 +43,74 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
     }
   }
   
-  const handleLoad = async (snapshotId: string) => {
-    const result = await loadSnapshot(snapshotId)
-    if (result) {
-      // Clear current stickies and load snapshot stickies
-      const stickyStore = useStickyStore.getState()
-      
-      // Clear all current stickies
-      stickyStore.clearAll()
-      
-      // Add stickies from snapshot
-      result.forEach(sticky => {
-        // Add sticky with position and color
-        stickyStore.addSticky(sticky.x, sticky.y, sticky.color)
-        
-        // Get the newly added sticky (last one in array)
-        const newSticky = stickyStore.stickies[stickyStore.stickies.length - 1]
-        if (newSticky) {
-          // Update text
-          if (sticky.text || sticky.richText) {
-            stickyStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
-          }
-          // Update size
-          if (sticky.size && sticky.size !== 1) {
-            stickyStore.updateStickySize(newSticky.id, sticky.size)
-          }
-          // Update font size
-          if (sticky.fontSize && sticky.fontSize !== 16) {
-            stickyStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
-          }
-          // Update format
-          if (sticky.isBold || sticky.isItalic || sticky.isUnderline) {
-            stickyStore.updateStickyFormat(newSticky.id, {
-              isBold: sticky.isBold,
-              isItalic: sticky.isItalic,
-              isUnderline: sticky.isUnderline
-            })
-          }
-        }
+  const handleLoadClick = (snapshot: { id: string; name: string; stickies: any[] }) => {
+    const stickyStore = useStickyStore.getState()
+    const hasExistingStickies = stickyStore.stickies.length > 0
+    
+    if (hasExistingStickies) {
+      // Show dialog to ask user preference
+      setLoadDialogState({
+        isOpen: true,
+        snapshotId: snapshot.id,
+        snapshotName: snapshot.name,
+        snapshotStickiesCount: snapshot.stickies.length
       })
-      
-      window.alert('スナップショットを読み込みました')
-      onClose()
+    } else {
+      // No existing stickies, just load directly
+      handleLoad(snapshot.id, true)
+    }
+  }
+  
+  const handleLoad = async (snapshotId: string, replaceExisting: boolean) => {
+    setLoadingId(snapshotId)
+    try {
+      const result = await loadSnapshot(snapshotId)
+      if (result) {
+        const stickyStore = useStickyStore.getState()
+        
+        // Clear existing stickies if user chose to replace
+        if (replaceExisting) {
+          stickyStore.clearAll()
+        }
+        
+        // Add stickies from snapshot
+        result.forEach(sticky => {
+          // Add sticky with position and color
+          stickyStore.addSticky(sticky.x, sticky.y, sticky.color)
+          
+          // Get the newly added sticky (last one in array)
+          const newSticky = stickyStore.stickies[stickyStore.stickies.length - 1]
+          if (newSticky) {
+            // Update text
+            if (sticky.text || sticky.richText) {
+              stickyStore.updateStickyText(newSticky.id, sticky.text, sticky.richText)
+            }
+            // Update size
+            if (sticky.size && sticky.size !== 1) {
+              stickyStore.updateStickySize(newSticky.id, sticky.size)
+            }
+            // Update font size
+            if (sticky.fontSize && sticky.fontSize !== 16) {
+              stickyStore.updateStickyFontSize(newSticky.id, sticky.fontSize)
+            }
+            // Update format
+            if (sticky.isBold || sticky.isItalic || sticky.isUnderline) {
+              stickyStore.updateStickyFormat(newSticky.id, {
+                isBold: sticky.isBold,
+                isItalic: sticky.isItalic,
+                isUnderline: sticky.isUnderline
+              })
+            }
+          }
+        })
+        
+        const message = replaceExisting ? 'スナップショットを読み込みました' : 'スナップショットを追加しました'
+        window.alert(message)
+        onClose()
+      }
+    } finally {
+      setLoadingId(null)
+      setLoadDialogState(null)
     }
   }
   
@@ -218,10 +252,11 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <button
-                        onClick={() => handleLoad(snapshot.id)}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        onClick={() => handleLoadClick(snapshot)}
+                        disabled={loadingId === snapshot.id}
+                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        読み込む
+                        {loadingId === snapshot.id ? '読み込み中...' : '読み込む'}
                       </button>
                       <button
                         onClick={() => handleDelete(snapshot.id)}
@@ -240,6 +275,20 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
           )}
         </div>
       </div>
+      
+      {/* Load Dialog */}
+      {loadDialogState && (
+        <LoadSnapshotDialog
+          isOpen={loadDialogState.isOpen}
+          onClose={() => setLoadDialogState(null)}
+          onConfirm={(replaceExisting) => {
+            handleLoad(loadDialogState.snapshotId, replaceExisting)
+          }}
+          currentStickiesCount={stickies.length}
+          snapshotStickiesCount={loadDialogState.snapshotStickiesCount}
+          snapshotName={loadDialogState.snapshotName}
+        />
+      )}
     </div>
   )
 }
