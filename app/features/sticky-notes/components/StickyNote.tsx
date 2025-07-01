@@ -643,25 +643,29 @@ export default function StickyNote({
           <>
             {/* Top-left */}
             <div
-              className="absolute -top-3 -left-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-50"
+              className="absolute w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-50"
+              style={{ top: '-10px', left: '-10px' }}
               onMouseDown={(e) => handleResizeMouseDown(e, 'tl')}
               data-testid="resize-handle-tl"
             />
             {/* Top-right */}
             <div
-              className="absolute -top-3 -right-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-50"
+              className="absolute w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-50"
+              style={{ top: '-10px', right: '-10px' }}
               onMouseDown={(e) => handleResizeMouseDown(e, 'tr')}
               data-testid="resize-handle-tr"
             />
             {/* Bottom-left */}
             <div
-              className="absolute -bottom-3 -left-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-50"
+              className="absolute w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-50"
+              style={{ bottom: '-10px', left: '-10px' }}
               onMouseDown={(e) => handleResizeMouseDown(e, 'bl')}
               data-testid="resize-handle-bl"
             />
             {/* Bottom-right */}
             <div
-              className="absolute -bottom-3 -right-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-50"
+              className="absolute w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-50"
+              style={{ bottom: '-10px', right: '-10px' }}
               onMouseDown={(e) => handleResizeMouseDown(e, 'br')}
               data-testid="resize-handle-br"
             />
