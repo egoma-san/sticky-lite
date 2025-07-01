@@ -376,19 +376,19 @@ export default function StickyNote({
         const initialSize = 192 * resizeStart.size
         
         // Improved resize calculation based on corner
-        // Use the maximum of X or Y movement for more responsive feel
+        // Use the diagonal distance for consistent resizing
         switch (resizeStart.corner) {
-          case 'tl': // Top-left: both should be negative to increase size
-            delta = -Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX < 0 && deltaY < 0 ? 1 : -1)
+          case 'tl': // Top-left: moving outward (left/up) increases size
+            delta = -(deltaX + deltaY)
             break
-          case 'tr': // Top-right: deltaX positive, deltaY negative to increase
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX > 0 && deltaY < 0 ? 1 : -1)
+          case 'tr': // Top-right: moving outward (right/up) increases size
+            delta = deltaX - deltaY
             break
-          case 'bl': // Bottom-left: deltaX negative, deltaY positive to increase
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX < 0 && deltaY > 0 ? 1 : -1)
+          case 'bl': // Bottom-left: moving outward (left/down) increases size
+            delta = -deltaX + deltaY
             break
-          case 'br': // Bottom-right: both should be positive to increase size
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX > 0 && deltaY > 0 ? 1 : -1)
+          case 'br': // Bottom-right: moving outward (right/down) increases size
+            delta = deltaX + deltaY
             break
         }
         
