@@ -366,7 +366,7 @@ export default function StickyNote({
     if (isResizing && resizeStart) {
       const handleMouseMove = (e: MouseEvent) => {
         // Get board element to calculate relative mouse position
-        const boardElement = document.querySelector('[data-testid="board-canvas"]')
+        const boardElement = document.querySelector('[data-testid="board-canvas"]') as HTMLElement
         if (!boardElement) return
         
         const rect = boardElement.getBoundingClientRect()
