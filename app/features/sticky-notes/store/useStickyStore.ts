@@ -40,11 +40,15 @@ export const useStickyStore = create<StickyStore>()(
         )
       })),
       
-      updateStickySize: (id, size) => set((state) => ({
-        stickies: state.stickies.map(sticky =>
+      updateStickySize: (id, size) => set((state) => {
+        console.log('[useStickyStore] updateStickySize:', { id, size })
+        const newStickies = state.stickies.map(sticky =>
           sticky.id === id ? { ...sticky, size } : sticky
         )
-      })),
+        const updatedSticky = newStickies.find(s => s.id === id)
+        console.log('[useStickyStore] Updated sticky:', updatedSticky)
+        return { stickies: newStickies }
+      }),
       
       updateStickyColor: (id, color) => set((state) => ({
         stickies: state.stickies.map(sticky =>

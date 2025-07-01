@@ -369,27 +369,40 @@ export default function StickyNote({
         
         const initialSize = 192 * resizeStart.size
         
+        // Simplified resize calculation based on corner
         switch (resizeStart.corner) {
-          case 'tl': // Top-left: fix bottom-right
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX + deltaY < 0 ? 1 : -1)
+          case 'tl': // Top-left: both should be negative to increase size
+            delta = -(deltaX + deltaY) / 2
             break
-          case 'tr': // Top-right: fix bottom-left
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX - deltaY > 0 ? 1 : -1)
+          case 'tr': // Top-right: deltaX positive, deltaY negative to increase
+            delta = (deltaX - deltaY) / 2
             break
-          case 'bl': // Bottom-left: fix top-right
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (-deltaX + deltaY > 0 ? 1 : -1)
+          case 'bl': // Bottom-left: deltaX negative, deltaY positive to increase
+            delta = (-deltaX + deltaY) / 2
             break
-          case 'br': // Bottom-right: fix top-left
-            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX + deltaY > 0 ? 1 : -1)
+          case 'br': // Bottom-right: both should be positive to increase size
+            delta = (deltaX + deltaY) / 2
             break
         }
         
-        // Calculate new size
-        const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / 200))
+        // Calculate new size with more sensitivity
+        const sensitivity = 100 // Lower value = more sensitive
+        const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / sensitivity))
         const newSizePx = 192 * newSize
         const sizeDiff = newSizePx - initialSize
         
-        console.log('Resize:', { delta, newSize, currentSize: resizeStart.size })
+        console.log('Resize:', { 
+          delta, 
+          newSize, 
+          currentSize: resizeStart.size,
+          deltaX,
+          deltaY,
+          corner: resizeStart.corner,
+          clientX: e.clientX,
+          clientY: e.clientY,
+          startX: resizeStart.x,
+          startY: resizeStart.y
+        })
         
         // Adjust position based on which corner is being dragged
         switch (resizeStart.corner) {
@@ -416,8 +429,16 @@ export default function StickyNote({
       }
 
       const handleMouseUp = () => {
+        console.log('Resize end:', {
+          oldSize: size,
+          newSize: localSize,
+          oldPos: { x, y },
+          newPos: localPosition
+        })
+        
         // Save final size and position to database
         if (localSize !== size || localPosition.x !== x || localPosition.y !== y) {
+          console.log('Saving new size:', localSize)
           onSizeChange(id, localSize)
           onPositionChange(id, localPosition.x, localPosition.y)
         }
