@@ -48,7 +48,10 @@ export function sanitizeSticky(sticky: any): SnapshotSticky {
  * Sanitize an array of stickies
  */
 export function sanitizeStickies(stickies: any[]): SnapshotSticky[] {
+  console.log('sanitizeStickies called with:', stickies)
+  
   if (!Array.isArray(stickies)) {
+    console.error('sanitizeStickies: Input is not an array:', stickies)
     return []
   }
   
@@ -56,14 +59,19 @@ export function sanitizeStickies(stickies: any[]): SnapshotSticky[] {
   const maxStickies = 1000
   const limitedStickies = stickies.slice(0, maxStickies)
   
-  return limitedStickies.map(sticky => {
+  const sanitized = limitedStickies.map(sticky => {
     try {
-      return sanitizeSticky(sticky)
+      const result = sanitizeSticky(sticky)
+      console.log('Sanitized sticky:', result)
+      return result
     } catch (error) {
-      console.error('Failed to sanitize sticky:', error)
+      console.error('Failed to sanitize sticky:', error, sticky)
       return null
     }
   }).filter(Boolean) as SnapshotSticky[]
+  
+  console.log('sanitizeStickies result:', sanitized)
+  return sanitized
 }
 
 /**

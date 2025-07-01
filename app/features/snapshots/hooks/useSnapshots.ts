@@ -26,24 +26,28 @@ export function useSnapshots() {
   
   // Helper to get current stickies in snapshot format
   const getCurrentStickies = (): SnapshotSticky[] => {
-    return stickies.map(sticky => ({
+    console.log('getCurrentStickies: input stickies:', stickies)
+    const result = stickies.map(sticky => ({
       id: sticky.id,
       x: sticky.x,
       y: sticky.y,
       text: sticky.text || '',
       richText: sticky.richText || undefined,
       color: sticky.color as StickyColor,
-      size: sticky.size,
-      fontSize: sticky.fontSize,
-      isBold: sticky.isBold,
-      isItalic: sticky.isItalic,
-      isUnderline: sticky.isUnderline
+      size: sticky.size || 1,
+      fontSize: sticky.fontSize || 16,
+      isBold: sticky.isBold || false,
+      isItalic: sticky.isItalic || false,
+      isUnderline: sticky.isUnderline || false
     }))
+    console.log('getCurrentStickies: output:', result)
+    return result
   }
   
   // Save current state as snapshot
   const saveCurrentAsSnapshot = async (name: string, description?: string) => {
     const currentStickies = getCurrentStickies()
+    console.log('useSnapshots: Saving snapshot with stickies:', currentStickies)
     await store.saveSnapshot(name, description, currentStickies)
   }
   

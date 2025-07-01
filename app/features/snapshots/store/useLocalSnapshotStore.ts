@@ -18,11 +18,14 @@ export const useLocalSnapshotStore = create<LocalSnapshotStore>()(
       
       saveSnapshot: async (name: string, description?: string, stickies?: SnapshotSticky[]) => {
         try {
+          console.log('LocalSnapshotStore: saveSnapshot called with:', { name, description, stickiesCount: stickies?.length })
           set({ isLoading: true, error: null })
           
           // Sanitize input
           const { name: sanitizedName, description: sanitizedDesc } = sanitizeSnapshotMetadata(name, description)
           const sanitizedStickies = stickies ? sanitizeStickies(stickies) : []
+          
+          console.log('LocalSnapshotStore: Sanitized stickies count:', sanitizedStickies.length)
           
           // Create new snapshot
           const newSnapshot: Snapshot = {
@@ -33,17 +36,23 @@ export const useLocalSnapshotStore = create<LocalSnapshotStore>()(
             createdAt: new Date()
           }
           
+          console.log('LocalSnapshotStore: Created snapshot:', newSnapshot)
+          
           // For local storage, we only keep one snapshot
           set({ 
             snapshot: newSnapshot,
             snapshots: [newSnapshot],
             isLoading: false 
           })
+          
+          console.log('LocalSnapshotStore: State updated successfully')
         } catch (error) {
+          console.error('LocalSnapshotStore: Error saving snapshot:', error)
           set({ 
             error: error instanceof Error ? error.message : 'Failed to save snapshot',
             isLoading: false 
           })
+          throw error
         }
       },
       

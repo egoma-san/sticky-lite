@@ -30,9 +30,12 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
   const handleSave = async () => {
     if (!name.trim()) return
     
+    console.log('Saving snapshot with:', { name, description, stickiesCount: stickies.length })
+    
     setSaving(true)
     try {
       await saveSnapshot(name, description)
+      console.log('Snapshot saved successfully')
       setName('')
       setDescription('')
       setShowSaveForm(false)
@@ -145,7 +148,8 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
         <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(80vh - 200px)' }}>
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-600 text-sm font-semibold">エラーが発生しました</p>
+              <p className="text-red-600 text-sm mt-1">{error}</p>
               <button
                 onClick={clearError}
                 className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
@@ -155,12 +159,28 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
             </div>
           )}
           
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600">
+              <p>Stickies count: {stickies.length}</p>
+              <p>Can save more: {canSaveMore ? 'Yes' : 'No'}</p>
+              <p>Max snapshots: {maxSnapshots}</p>
+              <p>Current snapshots: {snapshots.length}</p>
+            </div>
+          )}
+          
           {/* Save new snapshot */}
           {canSaveMore && (
             <div className="mb-6">
               {!showSaveForm ? (
                 <button
-                  onClick={() => setShowSaveForm(true)}
+                  onClick={() => {
+                    if (stickies.length === 0) {
+                      alert('保存する付箋がありません。まず付箋を作成してください。')
+                      return
+                    }
+                    setShowSaveForm(true)
+                  }}
                   disabled={stickies.length === 0}
                   className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
