@@ -35,11 +35,8 @@ export function useStickiesWithUndo() {
   }, [stickiesHook, saveStateBeforeChange])
   
   const updateStickySize = useCallback(async (id: string, size: number) => {
-    console.log('[useStickiesWithUndo] updateStickySize called:', { id, size })
     saveStateBeforeChange('Resize sticky')
-    const result = await stickiesHook.updateStickySize(id, size)
-    console.log('[useStickiesWithUndo] updateStickySize completed')
-    return result
+    return stickiesHook.updateStickySize(id, size)
   }, [stickiesHook, saveStateBeforeChange])
   
   const updateStickyColor = useCallback(async (id: string, color: StickyColor) => {

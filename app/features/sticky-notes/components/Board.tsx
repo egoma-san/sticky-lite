@@ -88,6 +88,7 @@ function BoardContent() {
     }
   }
   
+
   // Check if mobile device
   useEffect(() => {
     setIsMobileDevice(isMobile())
