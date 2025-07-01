@@ -38,7 +38,7 @@ export const useLocalSnapshotStore = create<LocalSnapshotStore>()(
           
           console.log('LocalSnapshotStore: Created snapshot:', newSnapshot)
           
-          // For local storage, we only keep one snapshot
+          // For local storage, we only keep one snapshot (overwrite existing)
           set({ 
             snapshot: newSnapshot,
             snapshots: [newSnapshot],
@@ -46,6 +46,12 @@ export const useLocalSnapshotStore = create<LocalSnapshotStore>()(
           })
           
           console.log('LocalSnapshotStore: State updated successfully')
+          
+          // Show confirmation if overwriting
+          const { snapshot: prevSnapshot } = get()
+          if (prevSnapshot && prevSnapshot.id !== newSnapshot.id) {
+            console.log('LocalSnapshotStore: Overwritten previous snapshot')
+          }
         } catch (error) {
           console.error('LocalSnapshotStore: Error saving snapshot:', error)
           set({ 

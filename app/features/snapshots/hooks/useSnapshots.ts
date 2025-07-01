@@ -56,7 +56,8 @@ export function useSnapshots() {
     isLoading: store.isLoading,
     error: store.error,
     maxSnapshots: store.maxSnapshots,
-    canSaveMore: store.snapshots.length < store.maxSnapshots,
+    // For local storage (maxSnapshots=1), always allow overwriting
+    canSaveMore: store.maxSnapshots === 1 ? true : store.snapshots.length < store.maxSnapshots,
     
     saveSnapshot: saveCurrentAsSnapshot,
     loadSnapshot: store.loadSnapshot,

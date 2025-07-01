@@ -32,6 +32,14 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
     
     console.log('Saving snapshot with:', { name, description, stickiesCount: stickies.length })
     
+    // Check if we're overwriting (for local storage)
+    if (maxSnapshots === 1 && snapshots.length > 0) {
+      const confirmOverwrite = window.confirm(
+        '既存のスナップショットを上書きします。よろしいですか？'
+      )
+      if (!confirmOverwrite) return
+    }
+    
     setSaving(true)
     try {
       await saveSnapshot(name, description)
@@ -159,18 +167,21 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
             </div>
           )}
           
-          {/* Debug info */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600">
-              <p>Stickies count: {stickies.length}</p>
-              <p>Can save more: {canSaveMore ? 'Yes' : 'No'}</p>
-              <p>Max snapshots: {maxSnapshots}</p>
-              <p>Current snapshots: {snapshots.length}</p>
+          {/* Debug info - temporarily show in all environments */}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <p className="font-semibold text-blue-900 mb-2">デバッグ情報:</p>
+            <div className="space-y-1 text-blue-800">
+              <p>• 現在の付箋数: {stickies.length}</p>
+              <p>• 保存可能: {canSaveMore ? 'はい' : 'いいえ'}</p>
+              <p>• 最大スナップショット数: {maxSnapshots}</p>
+              <p>• 現在のスナップショット数: {snapshots.length}</p>
+              <p>• ローディング中: {isLoading ? 'はい' : 'いいえ'}</p>
+              <p>• showSaveForm: {showSaveForm ? 'true' : 'false'}</p>
             </div>
-          )}
+          </div>
           
           {/* Save new snapshot */}
-          {canSaveMore && (
+          {(canSaveMore || snapshots.length === 0) && (
             <div className="mb-6">
               {!showSaveForm ? (
                 <button
@@ -197,6 +208,7 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
               ) : (
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <h3 className="font-medium mb-3">新しいスナップショット</h3>
+                  <p className="text-sm text-gray-600 mb-3">付箋数: {stickies.length}個</p>
                   <input
                     type="text"
                     value={name}
@@ -234,6 +246,16 @@ export default function SnapshotModal({ onClose }: SnapshotModalProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          
+          {/* Show message when max snapshots reached */}
+          {!canSaveMore && snapshots.length > 0 && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                スナップショットの保存上限（{maxSnapshots}件）に達しています。
+                新しいスナップショットを保存するには、既存のスナップショットを削除してください。
+              </p>
             </div>
           )}
           
