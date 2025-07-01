@@ -365,60 +365,65 @@ export default function StickyNote({
   useEffect(() => {
     if (isResizing && resizeStart) {
       const handleMouseMove = (e: MouseEvent) => {
-        const deltaX = e.clientX - resizeStart.x
-        const deltaY = e.clientY - resizeStart.y
+        // Get board element to calculate relative mouse position
+        const boardElement = document.querySelector('[data-testid="board-canvas"]')
+        if (!boardElement) return
         
-        // Determine resize direction based on corner
-        let delta = 0
-        let newX = resizeStart.initialX
-        let newY = resizeStart.initialY
+        const rect = boardElement.getBoundingClientRect()
+        const scale = parseFloat(boardElement.style.transform.match(/scale\(([\d.]+)\)/)?.[1] || '1')
+        
+        // Calculate mouse position relative to the board (accounting for scale)
+        const mouseX = (e.clientX - rect.left) / scale
+        const mouseY = (e.clientY - rect.top) / scale
         
         const initialSize = 192 * resizeStart.size
+        let newX = resizeStart.initialX
+        let newY = resizeStart.initialY
+        let newSizePx = initialSize
         
-        // Improved resize calculation based on corner
-        // Use the diagonal distance for consistent resizing
+        // Calculate new size based on which corner is being dragged
+        // The size should make the corner follow the mouse position
         switch (resizeStart.corner) {
-          case 'tl': // Top-left: moving outward (left/up) increases size
-            delta = -(deltaX + deltaY)
+          case 'tl': // Top-left corner follows mouse
+            const widthFromTL = (resizeStart.initialX + initialSize) - mouseX
+            const heightFromTL = (resizeStart.initialY + initialSize) - mouseY
+            newSizePx = Math.max(widthFromTL, heightFromTL)
+            newX = resizeStart.initialX + initialSize - newSizePx
+            newY = resizeStart.initialY + initialSize - newSizePx
             break
-          case 'tr': // Top-right: moving outward (right/up) increases size
-            delta = deltaX - deltaY
+            
+          case 'tr': // Top-right corner follows mouse
+            const widthFromTR = mouseX - resizeStart.initialX
+            const heightFromTR = (resizeStart.initialY + initialSize) - mouseY
+            newSizePx = Math.max(widthFromTR, heightFromTR)
+            newY = resizeStart.initialY + initialSize - newSizePx
             break
-          case 'bl': // Bottom-left: moving outward (left/down) increases size
-            delta = -deltaX + deltaY
+            
+          case 'bl': // Bottom-left corner follows mouse
+            const widthFromBL = (resizeStart.initialX + initialSize) - mouseX
+            const heightFromBL = mouseY - resizeStart.initialY
+            newSizePx = Math.max(widthFromBL, heightFromBL)
+            newX = resizeStart.initialX + initialSize - newSizePx
             break
-          case 'br': // Bottom-right: moving outward (right/down) increases size
-            delta = deltaX + deltaY
+            
+          case 'br': // Bottom-right corner follows mouse
+            const widthFromBR = mouseX - resizeStart.initialX
+            const heightFromBR = mouseY - resizeStart.initialY
+            newSizePx = Math.max(widthFromBR, heightFromBR)
             break
         }
         
-        // Calculate new size with more sensitivity
-        const sensitivity = 50 // Lower value = more sensitive (changed from 100 to 50)
-        const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / sensitivity))
-        const newSizePx = 192 * newSize
-        const sizeDiff = newSizePx - initialSize
+        // Convert pixel size to scale factor and apply constraints
+        const newSize = Math.max(0.5, Math.min(3, newSizePx / 192))
         
-        // Adjust position based on which corner is being dragged
-        switch (resizeStart.corner) {
-          case 'tl': // Moving top-left, bottom-right stays fixed
-            newX = resizeStart.initialX - sizeDiff
-            newY = resizeStart.initialY - sizeDiff
-            break
-          case 'tr': // Moving top-right, bottom-left stays fixed
-            newX = resizeStart.initialX
-            newY = resizeStart.initialY - sizeDiff
-            break
-          case 'bl': // Moving bottom-left, top-right stays fixed
-            newX = resizeStart.initialX - sizeDiff
-            newY = resizeStart.initialY
-            break
-          case 'br': // Moving bottom-right, top-left stays fixed
-            // Position stays the same
-            break
-        }
+        // Ensure minimum size
+        newSizePx = Math.max(96, newSizePx) // Minimum 96px (0.5 * 192)
+        
+        // Recalculate the actual size to use
+        const actualSize = newSizePx / 192
         
         // Update local state only during resize
-        setLocalSize(newSize)
+        setLocalSize(actualSize)
         setLocalPosition({ x: newX, y: newY })
       }
 
