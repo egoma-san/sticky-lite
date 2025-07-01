@@ -78,6 +78,7 @@ export default function StickyNote({
   const [origamiType, setOrigamiType] = useState<'crane' | 'plane'>('crane')
   const [localSize, setLocalSize] = useState(size)
   const [localPosition, setLocalPosition] = useState({ x, y })
+  const [hasResizeSaved, setHasResizeSaved] = useState(false)
   const noteRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -98,9 +99,6 @@ export default function StickyNote({
       setLocalPosition({ x, y })
     }
   }, [size, x, y, isResizing, hasResizeSaved])
-  
-  // Keep track of whether we've saved the resize
-  const [hasResizeSaved, setHasResizeSaved] = useState(false)
 
   const getGradientColors = () => {
     switch (color) {
