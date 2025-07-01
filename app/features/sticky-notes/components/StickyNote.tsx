@@ -76,9 +76,10 @@ export default function StickyNote({
   const [resizeStart, setResizeStart] = useState<{ x: number; y: number; size: number; corner: 'tl' | 'tr' | 'bl' | 'br'; initialX: number; initialY: number } | null>(null)
   const [peelAnimationType, setPeelAnimationType] = useState<'peel-off' | 'peel-corner'>('peel-off')
   const [origamiType, setOrigamiType] = useState<'crane' | 'plane'>('crane')
-  const [localSize, setLocalSize] = useState(size)
+  const [localSize, setLocalSize] = useState(size || 1)
   const [localPosition, setLocalPosition] = useState({ x, y })
   const [hasResizeSaved, setHasResizeSaved] = useState(false)
+  const [lastSavedSize, setLastSavedSize] = useState(size || 1)
   const noteRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -86,19 +87,17 @@ export default function StickyNote({
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 })
   const [hasTouchMoved, setHasTouchMoved] = useState(false)
   
-  // Initialize local state from props
-  useEffect(() => {
-    setLocalSize(size)
-    setLocalPosition({ x, y })
-  }, []) // Only run on mount
-  
-  // Update local state when props change (but not during resize)
+  // Update local state when props change (but not during or right after resize)
   useEffect(() => {
     if (!isResizing && !hasResizeSaved) {
-      setLocalSize(size)
+      // Only update if the prop size actually changed from external source
+      if (size !== lastSavedSize) {
+        setLocalSize(size || 1)
+        setLastSavedSize(size || 1)
+      }
       setLocalPosition({ x, y })
     }
-  }, [size, x, y, isResizing, hasResizeSaved])
+  }, [size, x, y, isResizing, hasResizeSaved, lastSavedSize])
 
   const getGradientColors = () => {
     switch (color) {
@@ -358,9 +357,9 @@ export default function StickyNote({
   const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
     e.stopPropagation()
     e.preventDefault()
-    console.log('Resize start:', { size, corner, x, y })
+    console.log('Resize start:', { size: localSize, corner, x: localPosition.x, y: localPosition.y })
     setIsResizing(true)
-    setResizeStart({ x: e.clientX, y: e.clientY, size: size || 1, corner, initialX: x, initialY: y })
+    setResizeStart({ x: e.clientX, y: e.clientY, size: localSize, corner, initialX: localPosition.x, initialY: localPosition.y })
   }
 
   useEffect(() => {
@@ -444,20 +443,27 @@ export default function StickyNote({
           newPos: localPosition
         })
         
+        // Mark that we're saving
+        setHasResizeSaved(true)
+        setLastSavedSize(localSize)
+        
         // Save final size and position to database
-        if (localSize !== size || localPosition.x !== x || localPosition.y !== y) {
+        if (localSize !== size) {
           console.log('Saving new size:', localSize)
-          setHasResizeSaved(true)
           onSizeChange(id, localSize)
+        }
+        if (localPosition.x !== x || localPosition.y !== y) {
           onPositionChange(id, localPosition.x, localPosition.y)
         }
         
-        // Don't set isResizing to false immediately to prevent useEffect from resetting
-        // Wait for the save to complete
+        // Clear resize state
+        setIsResizing(false)
+        setResizeStart(null)
+        
+        // Reset the save flag after a short delay
         setTimeout(() => {
-          setIsResizing(false)
-          setResizeStart(null)
-        }, 100)
+          setHasResizeSaved(false)
+        }, 500)
       }
 
       document.addEventListener('mousemove', handleMouseMove)
