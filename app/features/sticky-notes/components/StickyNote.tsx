@@ -85,9 +85,18 @@ export default function StickyNote({
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 })
   const [hasTouchMoved, setHasTouchMoved] = useState(false)
   
-  // Use local state during resize, otherwise use props
-  const displaySize = localSize !== null && isResizing ? localSize : size
-  const displayPosition = localPosition !== null && isResizing ? localPosition : { x, y }
+  // Use local state if available, otherwise use props
+  const displaySize = localSize !== null ? localSize : size
+  const displayPosition = localPosition !== null ? localPosition : { x, y }
+  
+  // Sync local state with props when props change (and we're not resizing)
+  useEffect(() => {
+    if (!isResizing) {
+      setLocalSize(size)
+      setLocalPosition({ x, y })
+    }
+  }, [size, x, y, isResizing])
+  
 
   const getGradientColors = () => {
     switch (color) {
@@ -424,8 +433,7 @@ export default function StickyNote({
         // Clear resize state
         setIsResizing(false)
         setResizeStart(null)
-        setLocalSize(null)
-        setLocalPosition(null)
+        // Don't clear local state - keep it synced with the new values
       }
 
       document.addEventListener('mousemove', handleMouseMove)
@@ -436,8 +444,7 @@ export default function StickyNote({
         document.removeEventListener('mouseup', handleMouseUp)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isResizing, resizeStart, id, x, y, onSizeChange, onPositionChange])
+  }, [isResizing, resizeStart, id, size, x, y, localSize, localPosition, onSizeChange, onPositionChange])
 
   return (
     <>
