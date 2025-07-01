@@ -515,13 +515,22 @@ function BoardContent() {
       
       // Handle delete/backspace for multiple selected notes
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedStickyIds.size > 0) {
+        console.log('Delete key pressed - checking conditions...')
+        console.log('Selected sticky IDs:', Array.from(selectedStickyIds))
+        console.log('Editing sticky:', editingSticky)
+        
         // Always check if we're in editing mode for any sticky first
         if (editingSticky) {
+          console.log('Blocked: editingSticky is true')
           return
         }
         
         // Don't delete if the user is typing in a textarea or input or contenteditable
         const activeElement = document.activeElement
+        console.log('Active element:', activeElement)
+        console.log('Active element tag:', activeElement?.tagName)
+        console.log('Active element contenteditable:', activeElement?.getAttribute('contenteditable'))
+        
         if (activeElement && (
           activeElement.tagName === 'TEXTAREA' || 
           activeElement.tagName === 'INPUT' ||
@@ -529,6 +538,7 @@ function BoardContent() {
           activeElement.closest('[contenteditable="true"]') || // Also check parent elements
           activeElement.closest('[data-testid="sticky-note"]') // Also check if focus is within any sticky note
         )) {
+          console.log('Blocked: active element is editable or within sticky note')
           return
         }
         
@@ -537,15 +547,21 @@ function BoardContent() {
           const stickyElement = document.getElementById(sticky.id)
           if (stickyElement) {
             const editableElement = stickyElement.querySelector('[contenteditable="true"]')
-            return editableElement !== null
+            const hasEditable = editableElement !== null
+            if (hasEditable) {
+              console.log(`Sticky ${sticky.id} has contenteditable element`)
+            }
+            return hasEditable
           }
           return false
         })
         
         if (isAnyNoteBeingEdited) {
+          console.log('Blocked: found sticky with contenteditable element')
           return
         }
         
+        console.log('All checks passed - deleting stickies')
         e.preventDefault()
         
         // Delete all selected sticky notes with animation
@@ -755,8 +771,61 @@ function BoardContent() {
                   // Trigger input event to save changes
                   activeEditor.dispatchEvent(new Event('input', { bubbles: true }))
                 } else {
-                  // In selection mode, apply format to whole notes
-                  selectedIds.forEach(id => updateStickyFormat(id, format))
+                  // In selection mode, check if there's text selected within sticky notes
+                  const selection = window.getSelection()
+                  const hasTextSelection = selection && selection.toString().trim().length > 0
+                  
+                  if (hasTextSelection && selection.rangeCount > 0) {
+                    // Apply format to selected text range
+                    const range = selection.getRangeAt(0)
+                    
+                    selectedIds.forEach(id => {
+                      const stickyElement = document.getElementById(id)
+                      if (stickyElement && stickyElement.contains(range.commonAncestorContainer)) {
+                        // Create a temporary contenteditable to apply formatting
+                        const sticky = stickies.find(s => s.id === id)
+                        if (!sticky) return
+                        
+                        // Enter temporary edit mode to apply format
+                        const textContainer = stickyElement.querySelector('[contenteditable], [dangerouslySetInnerHTML]') as HTMLElement
+                        if (textContainer) {
+                          // Make it temporarily editable
+                          const wasEditable = textContainer.contentEditable === 'true'
+                          if (!wasEditable) {
+                            textContainer.contentEditable = 'true'
+                            textContainer.innerHTML = sticky.richText || sticky.text.replace(/\n/g, '<br>')
+                          }
+                          
+                          // Restore selection and apply format
+                          selection.removeAllRanges()
+                          selection.addRange(range)
+                          
+                          if (format.isBold !== undefined) {
+                            document.execCommand('bold', false)
+                          }
+                          if (format.isItalic !== undefined) {
+                            document.execCommand('italic', false)
+                          }
+                          if (format.isUnderline !== undefined) {
+                            document.execCommand('underline', false)
+                          }
+                          
+                          // Save the changes
+                          const newRichText = textContainer.innerHTML
+                          const newText = textContainer.textContent || ''
+                          updateStickyText(id, newText, newRichText)
+                          
+                          // Restore non-editable state if needed
+                          if (!wasEditable) {
+                            textContainer.contentEditable = 'false'
+                          }
+                        }
+                      }
+                    })
+                  } else {
+                    // No selection, apply format to whole notes
+                    selectedIds.forEach(id => updateStickyFormat(id, format))
+                  }
                 }
               }}
               position={toolbarPosition}

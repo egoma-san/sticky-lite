@@ -249,6 +249,10 @@ export default function StickyNote({
     if (isSelected && !hasMultipleSelection && !isEditing) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
+          console.log(`[StickyNote ${id}] Delete key pressed`)
+          console.log(`[StickyNote ${id}] isEditing:`, isEditing)
+          console.log(`[StickyNote ${id}] activeElement:`, document.activeElement)
+          
           // Don't delete if the user is typing in a textarea, input, or contenteditable
           const activeElement = document.activeElement
           if (activeElement && (
@@ -257,8 +261,10 @@ export default function StickyNote({
             activeElement.getAttribute('contenteditable') === 'true' ||
             activeElement.closest('[contenteditable="true"]')
           )) {
+            console.log(`[StickyNote ${id}] Blocked: active element is editable`)
             return
           }
+          console.log(`[StickyNote ${id}] Deleting sticky note`)
           e.preventDefault()
           handleDelete()
         }
