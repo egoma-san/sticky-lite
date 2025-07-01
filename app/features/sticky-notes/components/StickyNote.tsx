@@ -375,24 +375,25 @@ export default function StickyNote({
         
         const initialSize = 192 * resizeStart.size
         
-        // Simplified resize calculation based on corner
+        // Improved resize calculation based on corner
+        // Use the maximum of X or Y movement for more responsive feel
         switch (resizeStart.corner) {
           case 'tl': // Top-left: both should be negative to increase size
-            delta = -(deltaX + deltaY) / 2
+            delta = -Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX < 0 && deltaY < 0 ? 1 : -1)
             break
           case 'tr': // Top-right: deltaX positive, deltaY negative to increase
-            delta = (deltaX - deltaY) / 2
+            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX > 0 && deltaY < 0 ? 1 : -1)
             break
           case 'bl': // Bottom-left: deltaX negative, deltaY positive to increase
-            delta = (-deltaX + deltaY) / 2
+            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX < 0 && deltaY > 0 ? 1 : -1)
             break
           case 'br': // Bottom-right: both should be positive to increase size
-            delta = (deltaX + deltaY) / 2
+            delta = Math.max(Math.abs(deltaX), Math.abs(deltaY)) * (deltaX > 0 && deltaY > 0 ? 1 : -1)
             break
         }
         
         // Calculate new size with more sensitivity
-        const sensitivity = 100 // Lower value = more sensitive
+        const sensitivity = 50 // Lower value = more sensitive (changed from 100 to 50)
         const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / sensitivity))
         const newSizePx = 192 * newSize
         const sizeDiff = newSizePx - initialSize
