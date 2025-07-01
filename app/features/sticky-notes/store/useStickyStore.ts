@@ -19,6 +19,11 @@ export const useStickyStore = create<StickyStore>()(
           y,
           text: '',
           color: color || state.selectedColor,
+          size: 1,
+          fontSize: 16,
+          isBold: false,
+          isItalic: false,
+          isUnderline: false,
           createdAt: new Date()
         }]
       })),

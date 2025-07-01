@@ -351,8 +351,9 @@ export default function StickyNote({
   const handleResizeMouseDown = (e: React.MouseEvent, corner: 'tl' | 'tr' | 'bl' | 'br') => {
     e.stopPropagation()
     e.preventDefault()
+    console.log('Resize start:', { size, corner, x, y })
     setIsResizing(true)
-    setResizeStart({ x: e.clientX, y: e.clientY, size, corner, initialX: x, initialY: y })
+    setResizeStart({ x: e.clientX, y: e.clientY, size: size || 1, corner, initialX: x, initialY: y })
   }
 
   useEffect(() => {
@@ -387,6 +388,8 @@ export default function StickyNote({
         const newSize = Math.max(0.5, Math.min(3, resizeStart.size + delta / 200))
         const newSizePx = 192 * newSize
         const sizeDiff = newSizePx - initialSize
+        
+        console.log('Resize:', { delta, newSize, currentSize: resizeStart.size })
         
         // Adjust position based on which corner is being dragged
         switch (resizeStart.corner) {
@@ -624,37 +627,37 @@ export default function StickyNote({
             />
           )}
         </div>
+        
+        {/* Resize handles */}
+        {isSelected && !hasMultipleSelection && (
+          <>
+            {/* Top-left */}
+            <div
+              className="absolute -top-3 -left-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'tl')}
+              data-testid="resize-handle-tl"
+            />
+            {/* Top-right */}
+            <div
+              className="absolute -top-3 -right-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'tr')}
+              data-testid="resize-handle-tr"
+            />
+            {/* Bottom-left */}
+            <div
+              className="absolute -bottom-3 -left-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nesw-resize hover:scale-125 transition-transform z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'bl')}
+              data-testid="resize-handle-bl"
+            />
+            {/* Bottom-right */}
+            <div
+              className="absolute -bottom-3 -right-3 w-6 h-6 bg-white border-2 border-blue-500 rounded-full shadow-lg cursor-nwse-resize hover:scale-125 transition-transform z-20"
+              onMouseDown={(e) => handleResizeMouseDown(e, 'br')}
+              data-testid="resize-handle-br"
+            />
+          </>
+        )}
       </div>
-      
-      {/* Resize handles */}
-      {isSelected && !hasMultipleSelection && (
-        <>
-          {/* Top-left */}
-          <div
-            className="absolute -top-2 -left-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nwse-resize hover:scale-110 transition-transform"
-            onMouseDown={(e) => handleResizeMouseDown(e, 'tl')}
-            data-testid="resize-handle-tl"
-          />
-          {/* Top-right */}
-          <div
-            className="absolute -top-2 -right-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nesw-resize hover:scale-110 transition-transform"
-            onMouseDown={(e) => handleResizeMouseDown(e, 'tr')}
-            data-testid="resize-handle-tr"
-          />
-          {/* Bottom-left */}
-          <div
-            className="absolute -bottom-2 -left-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nesw-resize hover:scale-110 transition-transform"
-            onMouseDown={(e) => handleResizeMouseDown(e, 'bl')}
-            data-testid="resize-handle-bl"
-          />
-          {/* Bottom-right */}
-          <div
-            className="absolute -bottom-2 -right-2 w-4 h-4 bg-white rounded-full shadow-md cursor-nwse-resize hover:scale-110 transition-transform"
-            onMouseDown={(e) => handleResizeMouseDown(e, 'br')}
-            data-testid="resize-handle-br"
-          />
-        </>
-      )}
     </div>
       
       
