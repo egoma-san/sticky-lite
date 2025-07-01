@@ -85,13 +85,22 @@ export default function StickyNote({
   const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 })
   const [hasTouchMoved, setHasTouchMoved] = useState(false)
   
-  // Sync props with local state when not resizing
+  // Initialize local state from props
   useEffect(() => {
-    if (!isResizing) {
+    setLocalSize(size)
+    setLocalPosition({ x, y })
+  }, []) // Only run on mount
+  
+  // Update local state when props change (but not during resize)
+  useEffect(() => {
+    if (!isResizing && !hasResizeSaved) {
       setLocalSize(size)
       setLocalPosition({ x, y })
     }
-  }, [size, x, y, isResizing])
+  }, [size, x, y, isResizing, hasResizeSaved])
+  
+  // Keep track of whether we've saved the resize
+  const [hasResizeSaved, setHasResizeSaved] = useState(false)
 
   const getGradientColors = () => {
     switch (color) {
@@ -426,6 +435,7 @@ export default function StickyNote({
         // Update local state only during resize
         setLocalSize(newSize)
         setLocalPosition({ x: newX, y: newY })
+        setHasResizeSaved(false)
       }
 
       const handleMouseUp = () => {
@@ -439,12 +449,17 @@ export default function StickyNote({
         // Save final size and position to database
         if (localSize !== size || localPosition.x !== x || localPosition.y !== y) {
           console.log('Saving new size:', localSize)
+          setHasResizeSaved(true)
           onSizeChange(id, localSize)
           onPositionChange(id, localPosition.x, localPosition.y)
         }
         
-        setIsResizing(false)
-        setResizeStart(null)
+        // Don't set isResizing to false immediately to prevent useEffect from resetting
+        // Wait for the save to complete
+        setTimeout(() => {
+          setIsResizing(false)
+          setResizeStart(null)
+        }, 100)
       }
 
       document.addEventListener('mousemove', handleMouseMove)
