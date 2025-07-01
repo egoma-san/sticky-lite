@@ -139,7 +139,8 @@ export default function ListPage() {
             >
               ボードに戻る
             </Link>
-            {isSupabaseEnabled() && (
+            {/* Login button */}
+            {isSupabaseEnabled() ? (
               isAuthenticated ? (
                 <>
                   <span className="text-sm text-gray-600 hidden sm:inline">
@@ -147,8 +148,13 @@ export default function ListPage() {
                   </span>
                   <button
                     onClick={() => {
-                      logout()
-                      // Don't redirect, just stay on the page
+                      const confirmLogout = window.confirm(
+                        'ログアウトすると、クラウドの付箋にアクセスできなくなります。\nローカルには保存されません。\n\n本当にログアウトしますか？'
+                      )
+                      if (confirmLogout) {
+                        logout()
+                        // Don't redirect, just stay on the page
+                      }
                     }}
                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                   >
@@ -163,6 +169,13 @@ export default function ListPage() {
                   ログイン
                 </Link>
               )
+            ) : (
+              <div 
+                className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed opacity-60"
+                title="近日公開予定"
+              >
+                ログイン (近日公開)
+              </div>
             )}
           </div>
         </div>
