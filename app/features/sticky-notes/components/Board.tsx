@@ -883,8 +883,8 @@ function BoardContent() {
       
       <AddStickyButton boardRef={boardRef} scale={scale} position={position} />
       
-      {/* Snapshot button */}
-      <SnapshotButton />
+      {/* Snapshot button - temporarily disabled */}
+      {/* <SnapshotButton /> */}
       
       {/* Top-right controls */}
       <div className="fixed top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 flex items-center gap-2 z-50">
