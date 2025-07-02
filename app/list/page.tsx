@@ -265,12 +265,12 @@ export default function ListPage() {
                 </Link>
               )
             ) : (
-              <div 
-                className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed opacity-60"
-                title="近日公開予定"
+              <Link
+                href="/login"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
-                ログイン (近日公開)
-              </div>
+                ログイン
+              </Link>
             )}
           </div>
         </div>
