@@ -2,7 +2,7 @@
 
 // ログイン機能の有効/無効を切り替えるフラグ
 // true に変更すると公開される
-const ENABLE_LOGIN_FEATURE = false
+const ENABLE_LOGIN_FEATURE = true
 
 export const features = {
   // Check if Supabase is configured
