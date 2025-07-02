@@ -7,7 +7,7 @@ const ALLOWED_IPS = process.env.ALLOWED_IPS?.split(',').map(ip => ip.trim()) || 
   '::1', // IPv6 localhost
   '127.0.0.1', // IPv4 localhost
   // 本番環境で許可したいIPアドレスをここに追加
-  // '123.456.789.0',
+  '133.155.80.239', // 許可されたIPアドレス
 ]
 
 // CIDR記法をサポートするための簡易的な実装
