@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
 import Link from 'next/link'
+import EnvironmentCheck from './EnvironmentCheck'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -17,12 +18,16 @@ export default function LoginPage() {
     e.preventDefault()
     clearError()
     
+    console.log('Login attempt:', { email, isSignup })
+    
     const success = isSignup 
       ? await signup(email, password)
       : await login(email, password)
     
     if (success) {
       router.push('/')
+    } else {
+      console.error('Login failed')
     }
   }
 
@@ -198,6 +203,9 @@ export default function LoginPage() {
             （データはブラウザに保存されます）
           </p>
         </div>
+        
+        {/* Environment check (development only) */}
+        <EnvironmentCheck />
 
         {/* Decorative rounded squares - hidden on small screens */}
         <div className="hidden sm:flex justify-center items-center gap-4">

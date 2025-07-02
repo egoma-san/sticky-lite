@@ -32,7 +32,8 @@ export const useAuthStore = create<AuthState>()(
     login: async (email: string, password: string) => {
       const client = getSupabase()
       if (!client) {
-        set({ error: 'Authentication service not available', isLoading: false })
+        console.error('Supabase client is null. Check environment variables.')
+        set({ error: 'Supabaseの設定が見つかりません。環境変数を確認してください。', isLoading: false })
         return false
       }
       
