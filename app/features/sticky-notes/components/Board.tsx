@@ -20,12 +20,10 @@ import { isSupabaseEnabled } from '@/app/lib/features'
 import { StickyColor } from '../types'
 import { useUndoStore } from '../store/useUndoStore'
 import SnapshotButton from '../../snapshots/components/SnapshotButton'
-import { useIPRestriction } from '../../auth/hooks/useIPRestriction'
 
 function BoardContent() {
   const router = useRouter()
   const { logout, isAuthenticated, user } = useAuthStore()
-  const { isIPAllowed, isLoading: isIPCheckLoading } = useIPRestriction()
   const searchParams = useSearchParams()
   const focusId = searchParams?.get('focus') || null
   const { stickies, addSticky, updateStickyText, updateStickyPosition, updateStickySize, updateStickyColor, updateStickyFontSize, updateStickyFormat, deleteSticky, deleteMultiple, restoreState } = useStickiesWithUndo()
@@ -905,7 +903,7 @@ function BoardContent() {
         </Link>
         
         {/* Login/Logout button */}
-        {isSupabaseEnabled() && isIPAllowed ? (
+        {isSupabaseEnabled() ? (
           isAuthenticated ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 hidden sm:inline">
@@ -966,16 +964,14 @@ function BoardContent() {
         ) : (
           <div 
             className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg shadow-md cursor-not-allowed flex items-center gap-2 opacity-60"
-            title={isIPCheckLoading ? "確認中..." : (isSupabaseEnabled() && !isIPAllowed ? "アクセスが制限されています" : "近日公開予定")}
+            title="近日公開予定"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <span className="text-sm font-medium">
               <span className="hidden sm:inline">ログイン</span>
-              <span className="text-xs ml-1">
-                {isIPCheckLoading ? "(確認中)" : (isSupabaseEnabled() && !isIPAllowed ? "(制限中)" : "(近日公開)")}
-              </span>
+              <span className="text-xs ml-1">(近日公開)</span>
             </span>
           </div>
         )}

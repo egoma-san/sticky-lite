@@ -11,7 +11,6 @@ import { Sticky } from '../features/sticky-notes/types'
 import { useStickyStore } from '../features/sticky-notes/store/useStickyStore'
 import { useSupabaseStickyStore } from '../features/sticky-notes/store/useSupabaseStickyStore'
 import { useBoardStore } from '../features/boards/store/useBoardStore'
-import { useIPRestriction } from '../features/auth/hooks/useIPRestriction'
 
 type SortKey = 'content' | 'color' | 'createdAt' | null
 type SortOrder = 'asc' | 'desc'
@@ -35,7 +34,6 @@ export default function ListPage() {
   const [isImporting, setIsImporting] = React.useState(false)
   const router = useRouter()
   const { logout, isAuthenticated, user } = useAuthStore()
-  const { isIPAllowed, isLoading: isIPCheckLoading } = useIPRestriction()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCheck = (id: string) => {
@@ -237,7 +235,7 @@ export default function ListPage() {
               ボードに戻る
             </Link>
             {/* Login button */}
-            {isSupabaseEnabled() && isIPAllowed ? (
+            {isSupabaseEnabled() ? (
               isAuthenticated ? (
                 <>
                   <span className="text-sm text-gray-600 hidden sm:inline">
@@ -269,9 +267,9 @@ export default function ListPage() {
             ) : (
               <div 
                 className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed opacity-60"
-                title={isIPCheckLoading ? "確認中..." : (isSupabaseEnabled() ? "アクセスが制限されています" : "近日公開予定")}
+                title="近日公開予定"
               >
-                ログイン {isIPCheckLoading ? "(確認中)" : (isSupabaseEnabled() && !isIPAllowed ? "(制限中)" : "(近日公開)")}
+                ログイン (近日公開)
               </div>
             )}
           </div>
