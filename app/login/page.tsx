@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
 import Link from 'next/link'
+import { useIPRestriction } from '../features/auth/hooks/useIPRestriction'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,6 +13,14 @@ export default function LoginPage() {
   const [isSignup, setIsSignup] = useState(false)
   const router = useRouter()
   const { login, signup, isLoading, error, clearError } = useAuthStore()
+  const { isIPAllowed, isLoading: isIPCheckLoading } = useIPRestriction()
+
+  // Redirect to home if IP is not allowed
+  useEffect(() => {
+    if (!isIPCheckLoading && !isIPAllowed) {
+      router.push('/')
+    }
+  }, [isIPAllowed, isIPCheckLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,6 +33,23 @@ export default function LoginPage() {
     if (success) {
       router.push('/')
     }
+  }
+
+  // Show loading state while checking IP
+  if (isIPCheckLoading) {
+    return (
+      <div className="min-h-screen h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">アクセス権限を確認中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render login form if IP is not allowed
+  if (!isIPAllowed) {
+    return null
   }
 
   return (
