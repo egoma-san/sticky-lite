@@ -158,6 +158,31 @@ export default function LoginPage() {
           </div>
         </div>
 
+        {/* Login benefits */}
+        <div className="bg-blue-50 rounded-2xl p-4 space-y-2">
+          <h3 className="text-sm font-semibold text-blue-900">ログインすると...</h3>
+          <ul className="space-y-1 text-xs text-blue-800">
+            <li className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>付箋がクラウドに自動保存され、データを失う心配がありません</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>スマホ・タブレット・PCなど複数の端末で同期できます</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>近日公開：共有機能、タグ機能、検索機能など</span>
+            </li>
+          </ul>
+        </div>
+
         {/* Skip login option */}
         <div className="text-center">
           <Link 

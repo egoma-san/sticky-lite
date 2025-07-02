@@ -1,22 +1,37 @@
 'use client'
 
-import React from 'react'
+import React, { useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStickies } from '../features/sticky-notes/hooks/useStickies'
 import { useAuthStore } from '../features/auth/store/useAuthStore'
 import { isSupabaseEnabled } from '@/app/lib/features'
+import { exportToCSV, downloadCSV, importFromCSV, readFileAsText } from '../features/sticky-notes/utils/csv'
+import { Sticky } from '../features/sticky-notes/types'
 
 type SortKey = 'content' | 'color' | 'createdAt' | null
 type SortOrder = 'asc' | 'desc'
 
 export default function ListPage() {
-  const { stickies, deleteSticky, deleteMultiple } = useStickies()
+  const { 
+    stickies, 
+    deleteSticky, 
+    deleteMultiple, 
+    addSticky, 
+    updateStickyPosition,
+    updateStickyText,
+    updateStickySize,
+    updateStickyColor,
+    updateStickyFontSize,
+    updateStickyFormat
+  } = useStickies()
   const [checkedItems, setCheckedItems] = React.useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = React.useState<SortKey>(null)
   const [sortOrder, setSortOrder] = React.useState<SortOrder>('asc')
+  const [isImporting, setIsImporting] = React.useState(false)
   const router = useRouter()
   const { logout, isAuthenticated, user } = useAuthStore()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCheck = (id: string) => {
     const newChecked = new Set(checkedItems)
@@ -126,6 +141,78 @@ export default function ListPage() {
     router.push(`/?focus=${id}`)
   }
 
+  const importStickies = async (importedStickies: Sticky[]) => {
+    for (const sticky of importedStickies) {
+      // Use imported position or generate random position
+      const x = sticky.x || (4000 + Math.random() * 2000)
+      const y = sticky.y || (4000 + Math.random() * 2000)
+      
+      // Create sticky with basic properties
+      await addSticky(x, y, sticky.color)
+      
+      // Get the ID of the newly created sticky
+      // Note: This is a workaround. In production, addSticky should return the new sticky
+      const currentStickies = useStickies.getState ? useStickies.getState().stickies : stickies
+      const newSticky = currentStickies[currentStickies.length - 1]
+      
+      if (newSticky) {
+        // Update all properties
+        if (sticky.text || sticky.richText) {
+          await updateStickyText(newSticky.id, sticky.text || '', sticky.richText)
+        }
+        if (sticky.size && sticky.size !== 1) {
+          await updateStickySize(newSticky.id, sticky.size)
+        }
+        if (sticky.fontSize && sticky.fontSize !== 16) {
+          await updateStickyFontSize(newSticky.id, sticky.fontSize)
+        }
+        if (sticky.isBold || sticky.isItalic || sticky.isUnderline) {
+          await updateStickyFormat(newSticky.id, {
+            isBold: sticky.isBold,
+            isItalic: sticky.isItalic,
+            isUnderline: sticky.isUnderline
+          })
+        }
+      }
+    }
+  }
+
+  const handleExportCSV = () => {
+    const selectedStickies = checkedItems.size > 0 
+      ? stickies.filter(s => checkedItems.has(s.id))
+      : stickies
+      
+    const csv = exportToCSV(selectedStickies)
+    const filename = `sticky-notes-${new Date().toISOString().split('T')[0]}.csv`
+    downloadCSV(csv, filename)
+  }
+
+  const handleImportCSV = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setIsImporting(true)
+    try {
+      const csvContent = await readFileAsText(file)
+      const importedStickies = importFromCSV(csvContent)
+      
+      // Import stickies with all their properties
+      await importStickies(importedStickies)
+      
+      alert(`${importedStickies.length}件の付箋をインポートしました`)
+      
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Import error:', error)
+      alert('インポートに失敗しました: ' + (error as Error).message)
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -181,24 +268,54 @@ export default function ListPage() {
         </div>
 
         {/* Action buttons */}
-        {stickies.length > 0 && (
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={handleSelectAll}
-              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              {checkedItems.size === stickies.length ? '全選択解除' : '全選択'}
-            </button>
-            {checkedItems.size > 0 && (
+        <div className="flex flex-wrap gap-4 mb-6">
+          {stickies.length > 0 && (
+            <>
               <button
-                onClick={handleDeleteSelected}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                onClick={handleSelectAll}
+                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
               >
-                選択した{checkedItems.size}件を削除
+                {checkedItems.size === stickies.length ? '全選択解除' : '全選択'}
               </button>
-            )}
+              {checkedItems.size > 0 && (
+                <button
+                  onClick={handleDeleteSelected}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  選択した{checkedItems.size}件を削除
+                </button>
+              )}
+            </>
+          )}
+          
+          <div className="flex gap-2 ml-auto">
+            <button
+              onClick={handleExportCSV}
+              disabled={stickies.length === 0}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+              </svg>
+              {checkedItems.size > 0 ? `選択した${checkedItems.size}件をエクスポート` : 'CSVエクスポート'}
+            </button>
+            
+            <label className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              {isImporting ? 'インポート中...' : 'CSVインポート'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleImportCSV}
+                disabled={isImporting}
+                className="hidden"
+              />
+            </label>
           </div>
-        )}
+        </div>
 
         {/* Table */}
         {stickies.length === 0 ? (
