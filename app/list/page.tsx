@@ -8,6 +8,9 @@ import { useAuthStore } from '../features/auth/store/useAuthStore'
 import { isSupabaseEnabled } from '@/app/lib/features'
 import { exportToCSV, downloadCSV, importFromCSV, readFileAsText } from '../features/sticky-notes/utils/csv'
 import { Sticky } from '../features/sticky-notes/types'
+import { useStickyStore } from '../features/sticky-notes/store/useStickyStore'
+import { useSupabaseStickyStore } from '../features/sticky-notes/store/useSupabaseStickyStore'
+import { useBoardStore } from '../features/boards/store/useBoardStore'
 
 type SortKey = 'content' | 'color' | 'createdAt' | null
 type SortOrder = 'asc' | 'desc'
@@ -142,6 +145,9 @@ export default function ListPage() {
   }
 
   const importStickies = async (importedStickies: Sticky[]) => {
+    const { isAuthenticated } = useAuthStore.getState()
+    const { currentBoard } = useBoardStore.getState()
+    
     for (const sticky of importedStickies) {
       // Use imported position or generate random position
       const x = sticky.x || (4000 + Math.random() * 2000)
@@ -152,7 +158,9 @@ export default function ListPage() {
       
       // Get the ID of the newly created sticky
       // Note: This is a workaround. In production, addSticky should return the new sticky
-      const currentStickies = useStickies.getState ? useStickies.getState().stickies : stickies
+      const currentStickies = isAuthenticated && currentBoard 
+        ? useSupabaseStickyStore.getState().stickies 
+        : useStickyStore.getState().stickies
       const newSticky = currentStickies[currentStickies.length - 1]
       
       if (newSticky) {
